@@ -2,14 +2,22 @@
 import discord
 from discord.ext import commands
 import os
-import config
 import sqlite3
 
-# NAYA JADU: Web Server ke liye imports (Render par 24/7 chalane ke liye)
+# NAYA TRICK: Environment Variable aur Config ka jhanjhat khatam
+try:
+    import config
+    OWNER_ID = config.OWNER_ID
+    BOT_TOKEN = config.BOT_TOKEN
+except ImportError:
+    # Agar Render par config.py nahi milti, toh yeh backup chalega
+    OWNER_ID = 727718500663033897  # Aapki asli Discord ID permanent yahan set kar di
+    BOT_TOKEN = os.getenv("BOT_TOKEN")
+
+# Web Server ke liye imports
 from flask import Flask
 from threading import Thread
 
-# Flask App setup
 app = Flask('')
 
 @app.route('/')
@@ -17,7 +25,6 @@ def home():
     return "SpaceX Bot Is Alive & Running 24/7! 🚀"
 
 def run_server():
-    # Render hamesha port 8080 ya dynamic port dhoondhta hai
     app.run(host='0.0.0.0', port=8080)
 
 def keep_alive():
@@ -33,7 +40,8 @@ def get_prefix(bot, message):
     prefixes = ['!!']
     return commands.when_mentioned_or(*prefixes)(bot, message)
 
-bot = commands.Bot(command_prefix=get_prefix, intents=intents, owner_ids={config.OWNER_ID})
+# BADAL DIYA: Ab bot bina kisi tension ke OWNER_ID utha lega
+bot = commands.Bot(command_prefix=get_prefix, intents=intents, owner_ids={OWNER_ID})
 bot.remove_command('help')
 
 @bot.event
@@ -45,7 +53,6 @@ async def on_ready():
     conn = sqlite3.connect("warnings.db")
     cursor = conn.cursor()
     
-    # Warnings Table
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS warnings (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -56,7 +63,6 @@ async def on_ready():
     )
     """)
     
-    # AFK Table
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS afk (
         server_id TEXT,
@@ -96,8 +102,6 @@ async def on_message(message):
     await bot.process_commands(message)
 
 if __name__ == '__main__':
-    # NAYA: Bot run hone se thik pehle Web Server ko background me chalu karega
     keep_alive()
     print("-> Background Web Server Started!")
-    
-    bot.run(config.BOT_TOKEN)
+    bot.run(BOT_TOKEN)
