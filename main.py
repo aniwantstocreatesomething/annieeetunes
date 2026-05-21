@@ -72,7 +72,7 @@ async def on_ready():
     )
     """)
     
-    # 🔥 NAYA JADU: GLOBAL ECONOMY TABLE (OwO Style)
+    # GLOBAL ECONOMY TABLE (OwO Style)
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS economy (
         user_id TEXT PRIMARY KEY,
@@ -81,9 +81,17 @@ async def on_ready():
     )
     """)
     
+    # 🔥 NAYA JADU: DJ ROLE TABLE FOR MUSIC SYSTEM
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS dj_roles (
+        server_id TEXT PRIMARY KEY, 
+        role_id TEXT
+    )
+    """)
+    
     conn.commit()
     conn.close()
-    print("-> Database Connected & Economy Tables Ready!")
+    print("-> Database Connected & All Tables (Economy + DJ) Ready!")
     
     print('Modules load ho rahe hain...')
     for filename in os.listdir('./cogs'):
@@ -93,17 +101,6 @@ async def on_ready():
             
     print('Bot successfully online aa gaya hai! 🎉')
     print("---------------------------------------")
-
-# 🔄 Owner Only Sync Command (Slash commands register karne ke liye)
-@bot.command(name="sync", hidden=True)
-@commands.is_owner()
-async def sync(ctx):
-    await ctx.send("🔄 Slash commands ko Sync kiya jaa raha hai...")
-    try:
-        synced = await bot.tree.sync()
-        await ctx.send(f"✅ Kamyabi se **{len(synced)}** Slash Commands sync ho gaye hain!")
-    except Exception as e:
-        await ctx.send(f"❌ Sync fail: {e}")
 
 @bot.event
 async def on_message(message):
