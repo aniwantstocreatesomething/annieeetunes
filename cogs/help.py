@@ -29,7 +29,7 @@ class Help(commands.Cog):
             embed.add_field(name="🛡️ Moderation", value=mod_list, inline=False)
             
             # --- 💰 ECONOMY & GAMING ---
-            eco_list = "`bal`, `work`, `slut`, `crime`, `rob`, `give`, `coinflip`, `roulette`, `blackjack`, `dep`, `with`"
+            eco_list = "`bal`, `work`, `slut`, `crime`, `rob`, `give`, `coinflip`, `roulette`, `blackjack`, `deposit`, `withdraw`"
             embed.add_field(name="💰 Economy & Gaming", value=eco_list, inline=False)
             
             # --- ⚙️ UTILITY CATEGORY ---
@@ -37,7 +37,7 @@ class Help(commands.Cog):
             embed.add_field(name="⚙️ Utility", value=util_list, inline=False)
             
             # --- ✨ GENERAL CATEGORY ---
-            general_list = "`afk`"
+            general_list = "`afk`, `remindme`"
             embed.add_field(name="✨ General", value=general_list, inline=False)
 
             embed.set_footer(text=f"Requested by {ctx.author.name}", icon_url=ctx.author.display_avatar.url)
@@ -69,10 +69,12 @@ class Help(commands.Cog):
             category = "Economy & Gaming"
         elif cmd.name in ["serverinfo", "botinfo", "invite"]:
             category = "Utility"
+        elif "genafk" in cog_name or "genremindme" in cog_name or cmd.name in ["afk", "remindme", "rm"]:
+            category = "General"
         else:
             category = "General"
 
-        # Custom details mapping database cache registry
+        # Custom details mapping cache
         if cmd.name == "setstatus":
             description = "Bot ka status aur activity badalne ke liye."
             usage = f"**Basic:** `{prefix}setstatus <status>`\n**Advanced:** `{prefix}setstatus <status> <playing/watching/listening> <text>`"
@@ -88,7 +90,7 @@ class Help(commands.Cog):
         elif cmd.name == "maintenance":
             description = "🚨 Global Bot Locking Engine! Pure bot commands block karne ke liye (Owner Only)."
             usage = f"`{prefix}maintenance <duration>`\n👉 Unlock karne ke liye: `{prefix}maintenance off`"
-            examples = f"`{prefix}maintenance 30m` -> 30 minutes offline lock\n`{prefix}maintenance off` -> Force recovery online"
+            examples = f"`{prefix}maintenance 30m`\n`{prefix}maintenance off`"
         elif cmd.name == "warn":
             description = "Kisi member ko officially warn karne ke liye aur unke DM me message bhejne ke liye."
             usage = f"`{prefix}warn @user <reason>`"
@@ -130,7 +132,7 @@ class Help(commands.Cog):
             usage = f"`{prefix}purge <amount>`"
             examples = f"`{prefix}purge 20`"
         elif cmd.name == "slowmode":
-            description = "Channel cooldown rate set karne ke liye."
+            description = "Channel cooldown rate set karne ke liye taaki log ruk kar chat karein."
             usage = f"`{prefix}slowmode <seconds>`"
             examples = f"`{prefix}slowmode 10`"
         elif cmd.name == "lock":
@@ -195,12 +197,12 @@ class Help(commands.Cog):
             examples = f"`{prefix}blackjack 2000`"
         elif cmd.name in ["deposit", "dep"]:
             description = "Wallet se cash nikal kar safe bank me deposit karne ke liye."
-            usage = f"`{prefix}dep <amount/all/half>`"
-            examples = f"`{prefix}dep all`"
+            usage = f"`{prefix}deposit <amount/all/half>`"
+            examples = f"`{prefix}deposit all`"
         elif cmd.name in ["withdraw", "with"]:
             description = "Bank account se paise nikal kar wapas cash wallet me lane ke liye."
-            usage = f"`{prefix}with <amount/all/half>`"
-            examples = f"`{prefix}with half`"
+            usage = f"`{prefix}withdraw <amount/all/half>`"
+            examples = f"`{prefix}withdraw half`"
         elif cmd.name == "invite":
             description = "Bot ko apne khud ke kisi server me add karne ke liye official invite link nikalne ke liye."
             usage = f"`{prefix}invite`"
@@ -217,6 +219,10 @@ class Help(commands.Cog):
             description = "Aapko AFK status par dalne ke liye taaki jab koi aapko ping kare toh bot use reason bataye."
             usage = f"`{prefix}afk <reason>`"
             examples = f"`{prefix}afk Khana kha raha hu`"
+        elif cmd.name == "remindme":
+            description = "⏰ Aapko aur baki users ko specific time ke baad kisi kaam ke liye ping karke yaad dilane ke liye."
+            usage = f"`{prefix}remindme <time><s/m/h> <work>`"
+            examples = f"`{prefix}remindme 20m Padhne jana hai`"
         elif cmd.name == "servers":
             description = "Sirf Bot Creator ke liye servers ki list dekhne ke liye (Owner Command)."
             usage = f"`{prefix}servers`"

@@ -1,10 +1,10 @@
-# cogs/util_afk.py
+# cogs/gen_afk.py
 import discord
 from discord.ext import commands
 import sqlite3
 import time
 
-class UtilAFK(commands.Cog):
+class GenAFK(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
@@ -35,7 +35,6 @@ class UtilAFK(commands.Cog):
     @commands.command(name="afk")
     async def afk(self, ctx, *, reason: str = "I am currently away!"):
         """Aapko AFK status par set kar deta hai."""
-        # Member ka nick badal kar [AFK] lagane ka try karna (Optional)
         try:
             if not ctx.author.display_name.startswith("[AFK]"):
                 await ctx.author.edit(nick=f"[AFK] {ctx.author.display_name}")
@@ -50,7 +49,6 @@ class UtilAFK(commands.Cog):
         )
         await ctx.send(embed=embed)
 
-    # NAYA JADU: Listener jo pings aur wapas aane wale logo ko detect karega
     @commands.Cog.listener()
     async def on_message(self, message):
         if message.author.bot or not message.guild:
@@ -71,20 +69,19 @@ class UtilAFK(commands.Cog):
                 description=f"👋 Welcome back {message.author.mention}! Aapka AFK status hata diya gaya hai.",
                 color=discord.Color.green()
             )
-            await message.channel.send(embed=embed, delete_after=5) # 5 second me gayab ho jayega
+            await message.channel.send(embed=embed, delete_after=5)
 
         # 2. CHECK PINGS: Agar koi kisi AFK bande ko ping karega
         if message.mentions:
             for member in message.mentions:
                 if member.id == message.author.id:
-                    continue # Agar khud ko ping kiya toh ignore
+                    continue
                 
                 member_afk = self.get_afk(message.guild.id, member.id)
                 if member_afk:
                     reason, timestamp = member_afk
                     gone_since = int(time.time()) - timestamp
                     
-                    # Time format set karna (e.g., 5m ago)
                     if gone_since < 60:
                         time_str = f"{gone_since}s pehle"
                     elif gone_since < 3600:
@@ -97,7 +94,7 @@ class UtilAFK(commands.Cog):
                         color=discord.Color.orange()
                     )
                     await message.channel.send(embed=embed)
-                    break # Ek baar me ek hi alert kaafi hai
+                    break
 
 async def setup(bot):
-    await bot.add_cog(UtilAFK(bot))
+    await bot.add_cog(GenAFK(bot))
