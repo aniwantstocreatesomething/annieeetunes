@@ -20,16 +20,16 @@ class Help(commands.Cog):
                 color=discord.Color.blue()
             )
             
-            # --- 👑 OWNER ONLY CATEGORY (Sirf aapko hi poori list dikhegi) ---
+            # --- 👑 OWNER ONLY CATEGORY ---
             if await self.bot.is_owner(ctx.author):
                 embed.add_field(name="👑 Owner Only", value="`servers`, `setstatus`, `add-money`, `reset-money`", inline=False)
             
-            # --- 🛡️ MODERATION CATEGORY ---
-            mod_list = "`warn`, `warnings`, `delwarn`, `clearwarn`, `mute`, `unmute`, `kick`, `ban`, `unban`, `purge`, `slowmode`, `lock`, `unlock`, `lockdown`, `say`"
+            # --- 🛡️ MODERATION CATEGORY (Blacklist Added Here!) ---
+            mod_list = "`warn`, `warnings`, `delwarn`, `clearwarn`, `mute`, `unmute`, `kick`, `ban`, `unban`, `purge`, `slowmode`, `lock`, `unlock`, `lockdown`, `say`, `blacklist`"
             embed.add_field(name="🛡️ Moderation", value=mod_list, inline=False)
             
-            # --- 💰 ECONOMY & GAMING (OwO Global Style) ---
-            eco_list = "`balance`, `work`, `slut`, `crime`, `rob`, `give`, `coinflip`, `roulette`, `blackjack`, `deposit`, `withdraw`"
+            # --- 💰 ECONOMY & GAMING ---
+            eco_list = "`bal`, `work`, `slut`, `crime`, `rob`, `give`, `coinflip`, `roulette`, `blackjack`, `dep`, `with`"
             embed.add_field(name="💰 Economy & Gaming", value=eco_list, inline=False)
             
             # --- ⚙️ UTILITY CATEGORY ---
@@ -49,7 +49,7 @@ class Help(commands.Cog):
         if not cmd:
             return await ctx.send(f"❌ Mujhe `{command_name}` naam ka koi command nahi mila!")
 
-        # 🔒 STRICT SECURITY CHECK: Owner commands par strict pehra
+        # 🔒 OWNER COMMAND SECURITY CHECK
         if cmd.name in ["servers", "setstatus", "add-money", "reset-money"] and not await self.bot.is_owner(ctx.author):
             return await ctx.send("❌ Aapke paas is command ki details dekhne ki permission nahi hai!")
 
@@ -63,7 +63,7 @@ class Help(commands.Cog):
         
         if cmd.name in ["servers", "setstatus", "add-money", "reset-money"]:
             category = "Owner Only"
-        elif cmd.name in ["warn", "warnings", "delwarn", "clearwarn", "mute", "unmute", "kick", "ban", "unban", "purge", "slowmode", "lock", "unlock", "lockdown", "say"]:
+        elif cmd.name in ["warn", "warnings", "delwarn", "clearwarn", "mute", "unmute", "kick", "ban", "unban", "purge", "slowmode", "lock", "unlock", "lockdown", "say", "blacklist"]:
             category = "Moderation"
         elif "eco" in cog_name or cmd.name in ["balance", "bal", "money", "work", "job", "slut", "crime", "rob", "steal", "give", "share", "pay", "coinflip", "cf", "roulette", "rt", "blackjack", "bj", "deposit", "dep", "withdraw", "with"]:
             category = "Economy & Gaming"
@@ -72,7 +72,7 @@ class Help(commands.Cog):
         else:
             category = "General"
 
-        # Commands ki custom details
+        # Custom details mapping
         if cmd.name == "setstatus":
             description = "Bot ka status aur activity badalne ke liye."
             usage = f"**Basic:** `{prefix}setstatus <status>`\n**Advanced:** `{prefix}setstatus <status> <playing/watching/listening> <text>`"
@@ -80,11 +80,15 @@ class Help(commands.Cog):
         elif cmd.name == "add-money":
             description = "Globally kisi bhi user ke wallet me coins add karne ke liye (Owner Command)."
             usage = f"`{prefix}add-money @user/ID <amount>`"
-            examples = f"`{prefix}add-money @Rishav 50000`\n`{prefix}add-money 727718500663033897 100000`"
+            examples = f"`{prefix}add-money @Rishav 50000`"
         elif cmd.name == "reset-money":
             description = "Globally kisi bhi user ka bank aur wallet balance completely zero karne ke liye (Owner Command)."
             usage = f"`{prefix}reset-money @user/ID`"
             examples = f"`{prefix}reset-money @User`"
+        elif cmd.name == "blacklist":
+            description = "🚨 Strictly for Bot Owner! Rules todne par kisi user ko globally bot se block karne ke liye."
+            usage = f"`{prefix}blacklist @user/ID <duration> [reason]`\n👉 Blacklist hatane ke liye duration `0` daalein."
+            examples = f"`{prefix}blacklist @User 30s Rules bypass` -> 30 seconds block\n`{prefix}blacklist @User 7d Rules break` -> 7 days block\n`{prefix}blacklist @User 0` -> Remove blacklist"
         elif cmd.name == "warn":
             description = "Kisi member ko officially warn karne ke liye aur unke DM me message bhejne ke liye."
             usage = f"`{prefix}warn @user <reason>`"
@@ -96,15 +100,15 @@ class Help(commands.Cog):
         elif cmd.name == "delwarn":
             description = "Kisi user ki koi ek specific warning number delete karne ke liye."
             usage = f"`{prefix}delwarn @user <warning_number>`"
-            examples = f"`{prefix}delwarn @User 1` -> Pehli warning delete karega."
+            examples = f"`{prefix}delwarn @User 1`"
         elif cmd.name == "clearwarn":
             description = "Kisi member ki saari warnings ek baar me poori tarah saaf karne ke liye."
             usage = f"`{prefix}clearwarn @user`"
             examples = f"`{prefix}clearwarn @User`"
         elif cmd.name == "mute":
-            description = "Kisi member ko specific samay (seconds, minutes, hours, days) ke liye timeout (mute) karne ke liye."
+            description = "Kisi member ko specific samay ke liye timeout (mute) karne ke liye."
             usage = f"`{prefix}mute @user <duration><s/m/h/d> <reason>`"
-            examples = f"`{prefix}mute @User 10m Abusing` -> 10 minutes ke liye."
+            examples = f"`{prefix}mute @User 10m Abusing`"
         elif cmd.name == "unmute":
             description = "Kisi member ka timeout samay se pehle hatane ke liye."
             usage = f"`{prefix}unmute @user <reason>`"
@@ -114,11 +118,11 @@ class Help(commands.Cog):
             usage = f"`{prefix}invite`"
             examples = f"`{prefix}invite`"
         elif cmd.name == "serverinfo":
-            description = "Jis server me aap hain uski poori details (Owner, Staff Roles aur Member counts) dekhne ke liye."
+            description = "Jis server me aap hain uski poori details dekhne ke liye."
             usage = f"`{prefix}serverinfo`"
             examples = f"`{prefix}serverinfo`"
         elif cmd.name == "botinfo":
-            description = "Bot ki live statistics (Total servers, monitored members aur tech specs) dekhne ke liye."
+            description = "Bot ki live statistics dekhne ke liye."
             usage = f"`{prefix}botinfo`"
             examples = f"`{prefix}botinfo`"
         elif cmd.name == "afk":
@@ -126,11 +130,11 @@ class Help(commands.Cog):
             usage = f"`{prefix}afk <reason>`"
             examples = f"`{prefix}afk Khana kha raha hu`"
         elif cmd.name == "purge":
-            description = "Chat se normal messages, sirf bots ke messages, ya kisi specific user ke messages filter karke delete karne ke liye."
-            usage = f"`{prefix}purge <amount>`\n`{prefix}purge bots <amount>`\n`{prefix}purge @user <amount>`"
-            examples = f"`{prefix}purge 20` -> 20 normal msgs."
+            description = "Chat se specific amount me messages delete karne ke liye."
+            usage = f"`{prefix}purge <amount>`"
+            examples = f"`{prefix}purge 20`"
         elif cmd.name == "kick":
-            description = "Kisi member ko server ke rules todne par server se bahar nikalne ke liye."
+            description = "Kisi member ko server se bahar nikalne ke liye."
             usage = f"`{prefix}kick @user <reason>`"
             examples = f"`{prefix}kick @User Misbehave`"
         elif cmd.name == "ban":
@@ -138,77 +142,77 @@ class Help(commands.Cog):
             usage = f"`{prefix}ban @user <reason>`"
             examples = f"`{prefix}ban @User Scam Link Sharing`"
         elif cmd.name == "unban":
-            description = "Kisi banned user ka ban hatakar use server me wapas aane ki permission dene ke liye."
+            description = "Kisi banned user ka ban hatakar use wapas aane dene ke liye."
             usage = f"`{prefix}unban <User_ID>`"
             examples = f"`{prefix}unban 727718500663033897`"
         elif cmd.name == "servers":
-            description = "Sirf Bot Creator ke liye! Bot jin-jin servers me add hai, unki poori list aur owner ka naam dekhne ke liye."
+            description = "Sirf Bot Creator ke liye servers ki list dekhne ke liye."
             usage = f"`{prefix}servers`"
             examples = f"`{prefix}servers`"
         elif cmd.name == "slowmode":
             description = "Channel cooldown rate set karne ke liye taaki log ruk kar chat karein."
             usage = f"`{prefix}slowmode <seconds>`"
-            examples = f"`{prefix}slowmode 10` -> 10s cooldown."
+            examples = f"`{prefix}slowmode 10`"
         elif cmd.name == "lock":
             description = "Channel ko explicit timer aur reason ke saath lock karne ke liye."
             usage = f"`{prefix}lock [#channel] [time] [reason]`"
-            examples = f"`{prefix}lock #general 30m Spamming!`"
+            examples = f"`{prefix}lock #general 30m`"
         elif cmd.name == "unlock":
             description = "Kisi locked channel ko wapas open karne ke liye."
             usage = f"`{prefix}unlock [#channel]`"
             examples = f"`{prefix}unlock #general`"
         elif cmd.name == "lockdown":
             description = "🚨 EMERGENCY COMMAND: Poore server ke saare text channels ko ek baar me lock/unlock karne ke liye."
-            usage = f"`{prefix}lockdown` -> Lockdown chalu.\n`{prefix}lockdown off` -> Lockdown hatane ke liye."
-            examples = f"`{prefix}lockdown`\n`{prefix}lockdown off`"
+            usage = f"`{prefix}lockdown` -> LOCKALL\n`{prefix}lockdown off` -> UNLOCKALL"
+            examples = f"`{prefix}lockdown`"
         elif cmd.name == "say":
-            description = "📢 Bot ke zariye chat me apni marzi ka message bhejne ya kisi user ko target karke ping karwane ke liye."
-            usage = f"`{prefix}say <message>`\n`{prefix}say @user <message>`"
+            description = "📢 Bot ke zariye chat me apni marzi ka message bhejne ke liye."
+            usage = f"`{prefix}say <message>`"
             examples = f"`{prefix}say Hello Rishav~`"
         elif cmd.name in ["balance", "bal"]:
-            description = "Aapka ya kisi dusre member ka cash wallet aur bank balance check karne ke liye."
-            usage = f"`{prefix}bal`\n`{prefix}bal @user`"
-            examples = f"`{prefix}bal`\n`{prefix}bal @Rishav`"
+            description = "Aapka wallet aur bank balance check karne ke liye."
+            usage = f"`{prefix}bal`"
+            examples = f"`{prefix}bal`"
         elif cmd.name == "work":
-            description = "Mehnat ka kaam karke bina kisi risk ke safe coins kamane ke liye. (Cooldown: 30s Countdown)"
+            description = "Mehnat ka kaam karke safe coins kamane ke liye. (30s Cooldown)"
             usage = f"`{prefix}work`"
             examples = f"`{prefix}work`"
         elif cmd.name == "slut":
-            description = "Risky tareeqon se paise kamane ke liye! Jeetne ka chance zyada hai par harne par fine lagega. (Cooldown: 30s Countdown)"
+            description = "Risky tareeqon se paise kamane ke liye! Harne par fine lag sakta hai."
             usage = f"`{prefix}slut`"
             examples = f"`{prefix}slut`"
         elif cmd.name == "crime":
-            description = "High-risk, High-reward illegal kaam! Jeetne par mota paisa, pakde jaane par bhaari fine. (Cooldown: 30s Countdown)"
+            description = "High-risk, High-reward illegal kaam! (30s Cooldown)"
             usage = f"`{prefix}crime`"
             examples = f"`{prefix}crime`"
         elif cmd.name == "rob":
-            description = "Kisi doosre user ke wallet (cash) se chori karne ke liye. Target ke paas jitna zyada cash hoga, fail hone ka chance utna hi badhega! (Cooldown: 30s Countdown)"
+            description = "Kisi doosre user ke wallet se cash churaane ke liye."
             usage = f"`{prefix}rob @user`"
-            examples = f"`{prefix}rob @Rishav`"
+            examples = f"`{prefix}rob @User`"
         elif cmd.name == "give":
             description = "Apne wallet se kisi doosre user ko coins transfer karne ke liye."
-            usage = f"`{prefix}give @user <amount/all/half>`"
-            examples = f"`{prefix}give @Rishav 5000`\n`{prefix}give @User all`"
+            usage = f"`{prefix}give @user <amount>`"
+            examples = f"`{prefix}give @User 5000`"
         elif cmd.name in ["coinflip", "cf"]:
-            description = "Heads ya Tails par jua khelne ke liye! Sahi andaze par lagaya hua paisa direct double."
-            usage = f"`{prefix}coinflip <amount/all/half> <heads/tails>`"
-            examples = f"`{prefix}coinflip 1000 heads`\n`{prefix}coinflip all tails`"
+            description = "Heads ya Tails par jua khelne ke liye! Double cash jackpot."
+            usage = f"`{prefix}coinflip <amount> <heads/tails>`"
+            examples = f"`{prefix}coinflip 1000 heads`"
         elif cmd.name in ["roulette", "rt"]:
-            description = "Casino Roulette game! Red/Black par lagane se 2x aur Green (0) par lagane se seedhe 14x cash multiplier milega!"
-            usage = f"`{prefix}roulette <amount/all/half> <red/black/green>`"
-            examples = f"`{prefix}roulette 500 red`\n`{prefix}roulette half green`"
+            description = "Casino Roulette game! Red/Black par 2x aur Green par direct 14x cash!"
+            usage = f"`{prefix}roulette <amount> <red/black/green>`"
+            examples = f"`{prefix}roulette 500 red`"
         elif cmd.name in ["blackjack", "bj"]:
             description = "Real interactive buttons (Hit/Stand) wala genuine Blackjack card game!"
-            usage = f"`{prefix}blackjack <amount/all/half>`"
-            examples = f"`{prefix}blackjack 2000`\n`{prefix}blackjack all`"
+            usage = f"`{prefix}blackjack <amount>`"
+            examples = f"`{prefix}blackjack 2000`"
         elif cmd.name in ["deposit", "dep"]:
-            description = "Wallet se cash nikal kar safe bank me deposit karne ke liye taaki koi rob na kar paye."
+            description = "Wallet se cash nikal kar safe bank me deposit karne ke liye."
             usage = f"`{prefix}dep <amount/all/half>`"
-            examples = f"`{prefix}dep 2000`\n`{prefix}dep all`"
+            examples = f"`{prefix}dep all`"
         elif cmd.name in ["withdraw", "with"]:
             description = "Bank account se paise nikal kar wapas cash wallet me lane ke liye."
             usage = f"`{prefix}with <amount/all/half>`"
-            examples = f"`{prefix}with 5000`\n`{prefix}with half`"
+            examples = f"`{prefix}with half`"
 
         cmd_embed = discord.Embed(title=f"ℹ️ Command Detail: {cmd.name.upper()}", color=discord.Color.green())
         cmd_embed.add_field(name="📝 Description", value=description, inline=False)

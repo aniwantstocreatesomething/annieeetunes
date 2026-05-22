@@ -3,6 +3,7 @@ import discord
 from discord.ext import commands
 import os
 import sqlite3
+import time
 
 # Environment Variable aur Config setup
 try:
@@ -81,7 +82,7 @@ async def on_ready():
     )
     """)
     
-    # 🔥 NAYA JADU: DJ ROLE TABLE FOR MUSIC SYSTEM
+    # DJ ROLE TABLE FOR MUSIC SYSTEM
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS dj_roles (
         server_id TEXT PRIMARY KEY, 
@@ -89,9 +90,18 @@ async def on_ready():
     )
     """)
     
+    # 🔥 NAYA JADU: GLOBAL BLACKLIST TABLE
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS blacklist (
+        user_id TEXT PRIMARY KEY,
+        expires_at INTEGER,
+        reason TEXT
+    )
+    """)
+    
     conn.commit()
     conn.close()
-    print("-> Database Connected & All Tables (Economy + DJ) Ready!")
+    print("-> Database Connected & All Tables (Economy + DJ + Blacklist) Ready!")
     
     print('Modules load ho rahe hain...')
     for filename in os.listdir('./cogs'):
@@ -107,10 +117,38 @@ async def on_message(message):
     if message.author.bot:
         return
 
+    # 🔥 CHAT CHECKER: Blacklist check karne ke liye
+    current_time = int(time.time())
+    conn = sqlite3.connect("warnings.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT expires_at, reason FROM blacklist WHERE user_id = ?", (str(message.author.id),))
+    row = cursor.fetchone()
+    conn.close()
+
+    if row:
+        expires_at, reason = row[0], row[1]
+        
+        # Agar permanent block hai (-1) ya time bacha hai
+        if expires_at == -1 or current_time < expires_at:
+            # Agar blacklisted user khud !!blacklist chalaye, toh message aage jaane do (taki troll dialog chale)
+            if message.content.startswith("!!blacklist") or message.content.startswith("!!bl"):
+                pass
+            else:
+                # Baki saare commands silently block ho jayenge
+                return
+
+        # Agar blacklist ka time khatam ho gaya hai, toh database se saaf kar do
+        elif current_time >= expires_at:
+            conn = sqlite3.connect("warnings.db")
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM blacklist WHERE user_id = ?", (str(message.author.id),))
+            conn.commit()
+            conn.close()
+
     if bot.user.mentioned_in(message) and len(message.content.strip().split()) == 1:
         embed = discord.Embed(
             title=f"Hello {message.author.name}! 👋",
-            description=f"Mera current prefix **`!!`** hai.\nAap commands ko **`!!help`** ya mujhe ping karke **`{bot.user.mention} help`** tarike se use kar sakte hain!",
+            description=f"Mera current prefix **``!!``** hai.\nAap commands ko **`!!help`** tarike se use kar sakte hain!",
             color=discord.Color.blue()
         )
         return await message.channel.send(embed=embed)
