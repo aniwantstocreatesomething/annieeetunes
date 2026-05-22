@@ -24,8 +24,8 @@ class Help(commands.Cog):
             if await self.bot.is_owner(ctx.author):
                 embed.add_field(name="👑 Owner Only", value="`servers`, `setstatus`, `add-money`, `reset-money`", inline=False)
             
-            # --- 🛡️ MODERATION CATEGORY (Blacklist Added Here!) ---
-            mod_list = "`warn`, `warnings`, `delwarn`, `clearwarn`, `mute`, `unmute`, `kick`, `ban`, `unban`, `purge`, `slowmode`, `lock`, `unlock`, `lockdown`, `say`, `blacklist`"
+            # --- 🛡️ MODERATION CATEGORY (Sahi Sequence Me modlogs Set Hai!) ---
+            mod_list = "`warn`, `warnings`, `delwarn`, `clearwarn`, `mute`, `unmute`, `kick`, `ban`, `unban`, `purge`, `slowmode`, `lock`, `unlock`, `lockdown`, `say`, `modlogs`, `blacklist`"
             embed.add_field(name="🛡️ Moderation", value=mod_list, inline=False)
             
             # --- 💰 ECONOMY & GAMING ---
@@ -63,7 +63,7 @@ class Help(commands.Cog):
         
         if cmd.name in ["servers", "setstatus", "add-money", "reset-money"]:
             category = "Owner Only"
-        elif cmd.name in ["warn", "warnings", "delwarn", "clearwarn", "mute", "unmute", "kick", "ban", "unban", "purge", "slowmode", "lock", "unlock", "lockdown", "say", "blacklist"]:
+        elif cmd.name in ["warn", "warnings", "delwarn", "clearwarn", "mute", "unmute", "kick", "ban", "unban", "purge", "slowmode", "lock", "unlock", "lockdown", "say", "modlogs", "blacklist"]:
             category = "Moderation"
         elif "eco" in cog_name or cmd.name in ["balance", "bal", "money", "work", "job", "slut", "crime", "rob", "steal", "give", "share", "pay", "coinflip", "cf", "roulette", "rt", "blackjack", "bj", "deposit", "dep", "withdraw", "with"]:
             category = "Economy & Gaming"
@@ -72,7 +72,7 @@ class Help(commands.Cog):
         else:
             category = "General"
 
-        # Custom details mapping
+        # Custom details mapping (POORA BACKUP RE-ALIGNED HERE)
         if cmd.name == "setstatus":
             description = "Bot ka status aur activity badalne ke liye."
             usage = f"**Basic:** `{prefix}setstatus <status>`\n**Advanced:** `{prefix}setstatus <status> <playing/watching/listening> <text>`"
@@ -85,10 +85,6 @@ class Help(commands.Cog):
             description = "Globally kisi bhi user ka bank aur wallet balance completely zero karne ke liye (Owner Command)."
             usage = f"`{prefix}reset-money @user/ID`"
             examples = f"`{prefix}reset-money @User`"
-        elif cmd.name == "blacklist":
-            description = "🚨 Strictly for Bot Owner! Rules todne par kisi user ko globally bot se block karne ke liye."
-            usage = f"`{prefix}blacklist @user/ID <duration> [reason]`\n👉 Blacklist hatane ke liye duration `0` daalein."
-            examples = f"`{prefix}blacklist @User 30s Rules bypass` -> 30 seconds block\n`{prefix}blacklist @User 7d Rules break` -> 7 days block\n`{prefix}blacklist @User 0` -> Remove blacklist"
         elif cmd.name == "warn":
             description = "Kisi member ko officially warn karne ke liye aur unke DM me message bhejne ke liye."
             usage = f"`{prefix}warn @user <reason>`"
@@ -113,26 +109,6 @@ class Help(commands.Cog):
             description = "Kisi member ka timeout samay se pehle hatane ke liye."
             usage = f"`{prefix}unmute @user <reason>`"
             examples = f"`{prefix}unmute @User Galti se mute hua`"
-        elif cmd.name == "invite":
-            description = "Bot ko apne khud ke kisi server me add karne ke liye official invite link nikalne ke liye."
-            usage = f"`{prefix}invite`"
-            examples = f"`{prefix}invite`"
-        elif cmd.name == "serverinfo":
-            description = "Jis server me aap hain uski poori details dekhne ke liye."
-            usage = f"`{prefix}serverinfo`"
-            examples = f"`{prefix}serverinfo`"
-        elif cmd.name == "botinfo":
-            description = "Bot ki live statistics dekhne ke liye."
-            usage = f"`{prefix}botinfo`"
-            examples = f"`{prefix}botinfo`"
-        elif cmd.name == "afk":
-            description = "Aapko AFK status par dalne ke liye taaki jab koi aapko ping kare toh bot use reason bataye."
-            usage = f"`{prefix}afk <reason>`"
-            examples = f"`{prefix}afk Khana kha raha hu`"
-        elif cmd.name == "purge":
-            description = "Chat se specific amount me messages delete karne ke liye."
-            usage = f"`{prefix}purge <amount>`"
-            examples = f"`{prefix}purge 20`"
         elif cmd.name == "kick":
             description = "Kisi member ko server se bahar nikalne ke liye."
             usage = f"`{prefix}kick @user <reason>`"
@@ -145,10 +121,10 @@ class Help(commands.Cog):
             description = "Kisi banned user ka ban hatakar use wapas aane dene ke liye."
             usage = f"`{prefix}unban <User_ID>`"
             examples = f"`{prefix}unban 727718500663033897`"
-        elif cmd.name == "servers":
-            description = "Sirf Bot Creator ke liye servers ki list dekhne ke liye."
-            usage = f"`{prefix}servers`"
-            examples = f"`{prefix}servers`"
+        elif cmd.name == "purge":
+            description = "Chat se specific amount me messages delete karne ke liye."
+            usage = f"`{prefix}purge <amount>`"
+            examples = f"`{prefix}purge 20`"
         elif cmd.name == "slowmode":
             description = "Channel cooldown rate set karne ke liye taaki log ruk kar chat karein."
             usage = f"`{prefix}slowmode <seconds>`"
@@ -169,6 +145,14 @@ class Help(commands.Cog):
             description = "📢 Bot ke zariye chat me apni marzi ka message bhejne ke liye."
             usage = f"`{prefix}say <message>`"
             examples = f"`{prefix}say Hello Rishav~`"
+        elif cmd.name == "modlogs":
+            description = "📊 Server me kisi user ke upar chalaaye gaye saare moderation action stats aur history dekhne ke liye."
+            usage = f"`{prefix}modlogs @user/ID`"
+            examples = f"`{prefix}modlogs @Rishav`\n`{prefix}modlogs 727718500663033897`"
+        elif cmd.name == "blacklist":
+            description = "🚨 Strictly for Bot Owner! Rules todne par kisi user ko globally bot se block karne ke liye."
+            usage = f"`{prefix}blacklist @user/ID <duration> [reason]`\n👉 Blacklist hatane ke liye duration `0` daalein."
+            examples = f"`{prefix}blacklist @User 30s Rules bypass`\n`{prefix}blacklist @User 0`"
         elif cmd.name in ["balance", "bal"]:
             description = "Aapka wallet aur bank balance check karne ke liye."
             usage = f"`{prefix}bal`"
@@ -213,6 +197,26 @@ class Help(commands.Cog):
             description = "Bank account se paise nikal kar wapas cash wallet me lane ke liye."
             usage = f"`{prefix}with <amount/all/half>`"
             examples = f"`{prefix}with half`"
+        elif cmd.name == "invite":
+            description = "Bot ko apne khud ke kisi server me add karne ke liye official invite link nikalne ke liye."
+            usage = f"`{prefix}invite`"
+            examples = f"`{prefix}invite`"
+        elif cmd.name == "serverinfo":
+            description = "Jis server me aap hain uski poori details dekhne ke liye."
+            usage = f"`{prefix}serverinfo`"
+            examples = f"`{prefix}serverinfo`"
+        elif cmd.name == "botinfo":
+            description = "Bot ki live statistics dekhne ke liye."
+            usage = f"`{prefix}botinfo`"
+            examples = f"`{prefix}botinfo`"
+        elif cmd.name == "afk":
+            description = "Aapko AFK status par dalne ke liye taaki jab koi aapko ping kare toh bot use reason bataye."
+            usage = f"`{prefix}afk <reason>`"
+            examples = f"`{prefix}afk Khana kha raha hu`"
+        elif cmd.name == "servers":
+            description = "Sirf Bot Creator ke liye servers ki list dekhne ke liye (Owner Command)."
+            usage = f"`{prefix}servers`"
+            examples = f"`{prefix}servers`"
 
         cmd_embed = discord.Embed(title=f"ℹ️ Command Detail: {cmd.name.upper()}", color=discord.Color.green())
         cmd_embed.add_field(name="📝 Description", value=description, inline=False)

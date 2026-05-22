@@ -51,6 +51,19 @@ async def on_ready():
     # DATABASE SETUP
     conn = sqlite3.connect("warnings.db")
     cursor = conn.cursor()
+
+    # 🔥 CENTRAL MODERATION LOGS TABLE
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS mod_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        server_id TEXT,
+        user_id TEXT,
+        action TEXT,
+        moderator_id TEXT,
+        reason TEXT,
+        timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
     
     # Moderation & AFK Tables
     cursor.execute("""
