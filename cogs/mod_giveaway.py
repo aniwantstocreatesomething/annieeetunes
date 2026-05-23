@@ -7,14 +7,15 @@ import re
 import datetime
 
 # --- ACTIVE GLOBAL DATA STORAGE MATRIX ---
-ACTIVE_GIVEAWAYS = {}  # Format: {giveaway_id: {"message": msg_obj, "view": view_obj, "prize": str, "ended": bool}}
+ACTIVE_GIVEAWAYS = {}  # Format: {giveaway_id: {"message": msg_obj, "view": view_obj, "prize": str, "ended": bool, "task": asyncio.Task}}
 GIVEAWAY_COUNTER = 0
 
 class GiveawayView(discord.ui.View):
     def __init__(self, required_role=None):
         super().__init__(timeout=None)
         self.entrants = set()
-        self.required_role = required_role
+        # Agar argument string context me 'none' hai ya empty hai, toh use None set karo
+        self.required_role = None if str(required_role).lower() == "none" else required_role
 
     @discord.ui.button(label="Join Giveaway! 🎉", style=discord.ButtonStyle.green, custom_id="join_giveaway_btn")
     async def join_button(self, interaction: discord.Interaction):
@@ -23,18 +24,30 @@ class GiveawayView(discord.ui.View):
         
         user = interaction.user
         
-        # 🛡️ ROLE REQUIREMENT CHECK
-        if self.required_role and self.required_role != "none":
-            role_obj = discord.utils.get(user.roles, id=int(self.required_role.id if isinstance(self.required_role, discord.Role) else self.required_role))
-            if not role_obj:
-                return await interaction.followup.send(f"❌ **Entry Denied:** Is giveaway me part lene ke liye aapke paas {self.required_role.mention if hasattr(self.required_role, 'mention') else 'required'} role hona zaroori hai!", ephemeral=True)
+        # 🛡️ ROLE REQUIREMENT CHECK (AIRTIGHT FILTER)
+        if self.required_role:
+            if isinstance(self.required_role, discord.Role):
+                if self.required_role not in user.roles:
+                    return await interaction.followup.send(f"❌ **Entry Denied:** Is giveaway me part lene ke liye aapke paas {self.required_role.mention} role hona zaroori hai bhai!", ephemeral=True)
+            else:
+                # Agar text base ID fallback hai
+                try:
+                    role_id = int(self.required_role)
+                    role_obj = interaction.guild.get_role(role_id)
+                    if not role_obj or role_obj not in user.roles:
+                        raise Exception
+                except Exception:
+                    # Agar role matrix valid nahi hai toh custom check bypass trigger
+                    role_obj = discord.utils.get(user.roles, name=str(self.required_role))
+                    if not role_obj:
+                        return await interaction.followup.send(f"❌ **Entry Denied:** Aapke paas required role (`{self.required_role}`) nahi hai!", ephemeral=True)
 
         if user.id in self.entrants:
             return await interaction.followup.send("❌ Bhai, tum pehle se hi is giveaway me joined ho!", ephemeral=True)
         
         self.entrants.add(user.id)
         
-        # Visually counter update logic
+        # Counter refresh metrics animation visualizer
         try:
             embed = interaction.message.embeds[0]
             embed.set_field_at(2, name="📊 Total Entries", value=f"`{len(self.entrants)}` Players", inline=True)
@@ -62,7 +75,7 @@ class ModGiveaway(commands.Cog):
 
     @commands.command(name="giveaway", aliases=["gstart"])
     @commands.has_permissions(manage_messages=True)
-    async def giveaway(self, ctx, duration_str: str = None, requirement_statement: str = None, role_req: discord.Role = None, *, prize: str = None):
+    async def giveaway(self, ctx, duration_str: str = None, requirement_statement: str = None, role_req: str = None, *, prize: str = None):
         """Advanced customizable parameters ke saath giveaway start karne ke liye."""
         global GIVEAWAY_COUNTER
         
@@ -83,6 +96,14 @@ class ModGiveaway(commands.Cog):
         if not seconds:
             return await ctx.send("❌ Galat time format! Use `s`, `m`, `h`, ya `d`.")
 
+        # Converters for structural roles parsing framework
+        parsed_role = role_req
+        if role_req.lower() != "none":
+            try:
+                parsed_role = await commands.RoleConverter().convert(ctx, role_req)
+            except Exception:
+                pass
+
         GIVEAWAY_COUNTER += 1
         current_g_id = GIVEAWAY_COUNTER
 
@@ -95,21 +116,24 @@ class ModGiveaway(commands.Cog):
             color=discord.Color.blurple()
         )
         embed.add_field(name="⏳ Ends In", value=timestamp_str, inline=True)
-        role_mention_text = role_req.mention if isinstance(role_req, discord.Role) else "`None`"
+        role_mention_text = parsed_role.mention if isinstance(parsed_role, discord.Role) else f"`{parsed_role.upper()}`"
         embed.add_field(name="🛡️ Role Required", value=role_mention_text, inline=True)
         embed.add_field(name="📊 Total Entries", value="`0` Players", inline=True)
         embed.add_field(name="👑 Host", value=ctx.author.mention, inline=False)
         embed.set_footer(text="Niche diye gaye button par click karke join karein!")
 
-        view = GiveawayView(required_role=role_req)
+        view = GiveawayView(required_role=parsed_role)
         g_msg = await ctx.send(content="🎉 **GIVEAWAY LIVE** 🎉", embed=embed, view=view)
 
-        # Global storage matrix tracking database register
+        # Background automation background loop management framework registry
+        loop_task = asyncio.create_task(self.giveaway_countdown_waiter(seconds, current_g_id, ctx.channel))
+
         ACTIVE_GIVEAWAYS[current_g_id] = {
             "message": g_msg,
             "view": view,
             "prize": prize,
-            "ended": False
+            "ended": False,
+            "task": loop_task
         }
 
         try:
@@ -117,9 +141,9 @@ class ModGiveaway(commands.Cog):
         except Exception:
             pass
 
-        # Background handler setup countdown timer loop
+    async def giveaway_countdown_waiter(self, seconds, giveaway_id, channel):
         await asyncio.sleep(seconds)
-        await self.end_giveaway_logic(current_g_id, ctx.channel)
+        await self.end_giveaway_logic(giveaway_id, channel)
 
     async def end_giveaway_logic(self, giveaway_id, channel):
         if giveaway_id not in ACTIVE_GIVEAWAYS or ACTIVE_GIVEAWAYS[giveaway_id]["ended"]:
@@ -127,6 +151,10 @@ class ModGiveaway(commands.Cog):
 
         data = ACTIVE_GIVEAWAYS[giveaway_id]
         data["ended"] = True
+        
+        # Background sleep tasks clear trigger framework cancel sequence
+        if not data["task"].done():
+            data["task"].cancel()
         
         try:
             g_msg = await channel.fetch_message(data["message"].id)
@@ -174,7 +202,6 @@ class ModGiveaway(commands.Cog):
         await ctx.send(f"⏱️ ID `#{giveaway_id}` ke giveaway ko instantly end kiya jaa raha hai...")
         await self.end_giveaway_logic(giveaway_id, ctx.channel)
 
-
     @commands.command(name="greroll", aliases=["reroll"])
     @commands.has_permissions(manage_messages=True)
     async def greroll(self, ctx, giveaway_id: int = None):
@@ -202,8 +229,8 @@ class ModGiveaway(commands.Cog):
     async def giveaway_error(self, ctx, error):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send("❌ **Permission Denied:** Is command ke liye aapke paas `Manage Messages` perms honi chahiye!")
-        elif isinstance(error, commands.BadArgument):
-            await ctx.send("❌ **Argument Error:** Kripya format check karein! Role mention sahi hona chahiye ya `none` string.")
+        else:
+            await ctx.send(f"❌ **Error:** Format check karein bhai! Sawaal aur values string context matrix double quotes `\" \"` me hona zaroori hai.")
 
 async def setup(bot):
     await bot.add_cog(ModGiveaway(bot))
