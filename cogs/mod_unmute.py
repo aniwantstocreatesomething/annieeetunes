@@ -1,6 +1,7 @@
 # cogs/mod_unmute.py
 import discord
 from discord.ext import commands
+import datetime
 
 class ModUnmute(commands.Cog):
     def __init__(self, bot):
@@ -11,9 +12,10 @@ class ModUnmute(commands.Cog):
     async def unmute(self, ctx, member: discord.Member, *, reason: str = "No reason provided"):
         """Kisi member ka timeout (mute) pehle hatane ke liye."""
         
-        # Check karna ki banda timeout par hai bhi ya nahi
-        if not member.timed_out_until:
-            return await ctx.send(f"❌ {member.mention} pehle se hi unmuted hai!")
+        # 🔥 FIX: Check karna ki timeout real me active hai ya khatam ho chuka hai
+        now = datetime.datetime.now(datetime.timezone.utc)
+        if not member.timed_out_until or member.timed_out_until <= now:
+            return await ctx.send(f"❌ {member.mention} pehle se hi unmuted hai bhai! Is par koi active timeout nahi hai.")
 
         try:
             # Timeout hatane ke liye None pass kiya jata hai
@@ -38,6 +40,8 @@ class ModUnmute(commands.Cog):
 
         except discord.Forbidden:
             await ctx.send("❌ Main is member ka timeout nahi hata sakta! Mera role is member se upar hona chahiye.")
+        except Exception as e:
+            await ctx.send(f"❌ Kuch gadbad hui: {e}")
 
     @unmute.error
     async def unmute_error(self, ctx, error):

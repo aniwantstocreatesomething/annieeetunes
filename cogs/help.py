@@ -21,15 +21,15 @@ class Help(commands.Cog):
             )
             
             if await self.bot.is_owner(ctx.author):
-                embed.add_field(name="👑 Owner Only", value="`servers`, `setstatus`, `add-money`, `reset-money`, `maintenance`, `blacklist`", inline=False)
+                embed.add_field(name="👑 Owner Only", value="`servers`, `setstatus`, `add-money`, `remove-money`, `maintenance`, `blacklist`", inline=False)
             
-            mod_list = "`warn`, `warnings`, `delwarn`, `clearwarn`, `mute`, `unmute`, `kick`, `ban`, `unban`, `purge`, `slowmode`, `lock`, `unlock`, `lockdown`, `say`, `modlogs`, `poll`, `pin`, `unpin`, `setprefix`"
+            mod_list = "`warn`, `warnings`, `delwarn`, `clearwarn`, `mute`, `unmute`, `kick`, `ban`, `unban`, `purge`, `slowmode`, `lock`, `unlock`, `lockdown`, `say`, `modlogs`, `poll`, `pin`, `unpin`, `setprefix`, `giveaway`"
             embed.add_field(name="🛡️ Moderation", value=mod_list, inline=False)
             
-            eco_list = "`bal`, `work`, `slut`, `crime`, `rob`, `give`, `coinflip`, `roulette`, `blackjack`, `deposit`, `withdraw`"
+            eco_list = "`bal`, `work`, `slut`, `crime`, `rob`, `give`, `coinflip`, `roulette`, `blackjack`, `deposit`, `withdraw`, `leaderboard`"
             embed.add_field(name="💰 Economy & Gaming", value=eco_list, inline=False)
             
-            util_list = "`serverinfo`, `botinfo`, `invite`"
+            util_list = "`serverinfo`, `botinfo`, `invite`, `avatar`"
             embed.add_field(name="⚙️ Utility", value=util_list, inline=False)
             
             general_list = "`afk`, `remindme`"
@@ -44,7 +44,7 @@ class Help(commands.Cog):
         if not cmd:
             return await ctx.send(f"❌ Mujhe `{command_name}` naam ka koi command nahi mila!")
 
-        if cmd.name in ["servers", "setstatus", "add-money", "reset-money", "maintenance", "blacklist"] and not await self.bot.is_owner(ctx.author):
+        if cmd.name in ["servers", "setstatus", "add-money", "remove-money", "maintenance", "blacklist"] and not await self.bot.is_owner(ctx.author):
             return await ctx.send("❌ Aapke paas is command ki details dekhne ki permission nahi hai!")
 
         description = "Koi description nahi di gayi."
@@ -54,13 +54,13 @@ class Help(commands.Cog):
         
         cog_name = cmd.cog.__class__.__name__.lower() if cmd.cog else ""
         
-        if cmd.name in ["servers", "setstatus", "add-money", "reset-money", "maintenance", "blacklist"]:
+        if cmd.name in ["servers", "setstatus", "add-money", "remove-money", "maintenance", "blacklist"]:
             category = "Owner Only"
-        elif "modpoll" in cog_name or "modpin" in cog_name or cmd.name in ["warn", "warnings", "delwarn", "clearwarn", "mute", "unmute", "kick", "ban", "unban", "purge", "slowmode", "lock", "unlock", "lockdown", "say", "modlogs", "poll", "pin", "unpin", "setprefix"]:
+        elif "modpoll" in cog_name or "modpin" in cog_name or "modgiveaway" in cog_name or "modprefix" in cog_name or cmd.name in ["warn", "warnings", "delwarn", "clearwarn", "mute", "unmute", "kick", "ban", "unban", "purge", "slowmode", "lock", "unlock", "lockdown", "say", "modlogs", "poll", "pin", "unpin", "setprefix", "giveaway", "greroll", "reroll"]:
             category = "Moderation"
-        elif "eco" in cog_name or cmd.name in ["balance", "bal", "money", "work", "job", "slut", "crime", "rob", "steal", "give", "share", "pay", "coinflip", "cf", "roulette", "rt", "blackjack", "bj", "deposit", "dep", "withdraw", "with"]:
+        elif "eco" in cog_name or cmd.name in ["balance", "bal", "money", "work", "job", "slut", "crime", "rob", "steal", "give", "share", "pay", "coinflip", "cf", "roulette", "rt", "blackjack", "bj", "deposit", "dep", "withdraw", "with", "leaderboard", "lb"]:
             category = "Economy & Gaming"
-        elif cmd.name in ["serverinfo", "botinfo", "invite"]:
+        elif "utilavatar" in cog_name or cmd.name in ["serverinfo", "botinfo", "invite", "avatar", "pfp", "av"]:
             category = "Utility"
         elif "genafk" in cog_name or "genremindme" in cog_name or cmd.name in ["afk", "remindme", "rm"]:
             category = "General"
@@ -199,9 +199,29 @@ class Help(commands.Cog):
             description = "Sirf Bot Creator ke liye servers ki list (Owner Command)."
             usage = f"`{prefix}servers`"
         elif cmd.name == "setprefix":
-         description = "⚙️ Server ka default custom bot prefix badalne ke liye (Requires Manage Server Permission)."
-         usage = f"`{prefix}setprefix <new_prefix>`"
-         examples = f"`{prefix}setprefix $`\n`{prefix}setprefix !!`"
+            description = "⚙️ Server ka default custom bot prefix badalne ke liye (Requires Manage Server Permission)."
+            usage = f"`{prefix}setprefix <new_prefix>`"
+            examples = f"`{prefix}setprefix $`\n`{prefix}setprefix !!`"
+        elif cmd.name in ["leaderboard", "lb"]:
+            description = "🏆 Server ya Global level par top 10 sabse ameer players ki list dekhne ke liye."
+            usage = f"`{prefix}lb server`\n`{prefix}lb global`"
+            examples = f"`{prefix}lb server`\n`{prefix}lb global`"
+        elif cmd.name in ["giveaway", "gstart"]:
+            description = "🎉 Advance Interactive Button wala automatic giveaway start karne ke liye (Requires Manage Messages Permission)."
+            usage = f"`{prefix}giveaway <time> <prize>`"
+            examples = f"`{prefix}giveaway 10m Nitro Premium`"
+        elif cmd.name in ["greroll", "reroll"]:
+            description = "🔄 Giveaway ka naya random winner instantly nikalne ke liye."
+            usage = f"`{prefix}reroll <giveaway_message_id>`"
+            examples = f"`{prefix}reroll 124357285194729481`"
+        elif cmd.name in ["avatar", "av", "pfp"]:
+            description = "🖼️ Kisi bhi member ki high-resolution profile picture dekhne ke liye."
+            usage = f"`{prefix}avatar [@user]`"
+            examples = f"`{prefix}avatar`\n`{prefix}avatar @User`"
+        elif cmd.name in ["remove-money", "removemoney", "rm"]:
+         description = "👑 Sirf Rishav bhai ke liye - Kisi bhi user ka paisa globally deduct, half ya completely clear karne ke liye."
+         usage = f"`{prefix}rm @user/ID <amount/all/half>`"
+         examples = f"`{prefix}rm @User 4e5`\n`{prefix}rm ID half`"
 
         cmd_embed = discord.Embed(title=f"ℹ️ Command Detail: {cmd.name.upper()}", color=discord.Color.green())
         cmd_embed.add_field(name="📝 Description", value=description, inline=False)
