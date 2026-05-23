@@ -6,27 +6,44 @@ import random
 import re
 import datetime
 
-# --- INTERACTIVE BUTTON FOR JOINING ---
+# --- ACTIVE GLOBAL DATA STORAGE MATRIX ---
+ACTIVE_GIVEAWAYS = {}  # Format: {giveaway_id: {"message": msg_obj, "view": view_obj, "prize": str, "ended": bool}}
+GIVEAWAY_COUNTER = 0
+
 class GiveawayView(discord.ui.View):
-    def __init__(self):
-        super().__init__(timeout=None) # Timeout None taaki bot restart par bhi button active rahe
-        self.entrants = set() # Duplicate entry block karne ke liye set
+    def __init__(self, required_role=None):
+        super().__init__(timeout=None)
+        self.entrants = set()
+        self.required_role = required_role
 
     @discord.ui.button(label="Join Giveaway! 🎉", style=discord.ButtonStyle.green, custom_id="join_giveaway_btn")
     async def join_button(self, interaction: discord.Interaction):
-        user_id = interaction.user.id
+        # 🔥 CRITICAL FIX: Pehle response defer kar do taaki Discord interaction failed na dikhaye!
+        await interaction.response.defer(ephemeral=True)
         
-        if user_id in self.entrants:
-            return await interaction.response.send_message("❌ Bhai, tum pehle se hi is giveaway me joined ho!", ephemeral=True)
+        user = interaction.user
         
-        self.entrants.add(user_id)
-        # Update embed counter text visually
-        embed = interaction.message.embeds[0]
-        # Field 1 me total entries track ho rahi hain
-        embed.set_field_at(1, name="📊 Total Entries", value=f"`{len(self.entrants)}` Players", inline=True)
+        # 🛡️ ROLE REQUIREMENT CHECK
+        if self.required_role and self.required_role != "none":
+            role_obj = discord.utils.get(user.roles, id=int(self.required_role.id if isinstance(self.required_role, discord.Role) else self.required_role))
+            if not role_obj:
+                return await interaction.followup.send(f"❌ **Entry Denied:** Is giveaway me part lene ke liye aapke paas {self.required_role.mention if hasattr(self.required_role, 'mention') else 'required'} role hona zaroori hai!", ephemeral=True)
+
+        if user.id in self.entrants:
+            return await interaction.followup.send("❌ Bhai, tum pehle se hi is giveaway me joined ho!", ephemeral=True)
         
-        await interaction.message.edit(embed=embed)
-        await interaction.response.send_message("🎉 Mubarak ho! Tumne giveaway kamyabi se join kar liya hai.", ephemeral=True)
+        self.entrants.add(user.id)
+        
+        # Visually counter update logic
+        try:
+            embed = interaction.message.embeds[0]
+            embed.set_field_at(2, name="📊 Total Entries", value=f"`{len(self.entrants)}` Players", inline=True)
+            await interaction.message.edit(embed=embed)
+        except Exception:
+            pass
+            
+        await interaction.followup.send("🎉 **Mubarak ho!** Tumne giveaway kamyabi se join kar liya hai.", ephemeral=True)
+
 
 class ModGiveaway(commands.Cog):
     def __init__(self, bot):
@@ -45,55 +62,84 @@ class ModGiveaway(commands.Cog):
 
     @commands.command(name="giveaway", aliases=["gstart"])
     @commands.has_permissions(manage_messages=True)
-    async def giveaway(self, ctx, duration_str: str = None, *, prize: str = None):
-        """Server me modern interactive buttons wala giveaway start karne ke liye."""
+    async def giveaway(self, ctx, duration_str: str = None, requirement_statement: str = None, role_req: discord.Role = None, *, prize: str = None):
+        """Advanced customizable parameters ke saath giveaway start karne ke liye."""
+        global GIVEAWAY_COUNTER
         
-        if not duration_str or not prize:
+        if not duration_str or not requirement_statement or not role_req or not prize:
             embed_err = discord.Embed(
-                title="❌ Format Error!",
-                description=f"Sahi tarika: `{ctx.prefix}giveaway <time><s/m/h/d> <prize>`\nExample: `{ctx.prefix}giveaway 10m Spotify Premium`",
+                title="❌ Advance Format Error!",
+                description=f"**Sahi Tarika:**\n`{ctx.prefix}gstart <time> \"<requirements_text>\" <@role/none> <prize>`",
                 color=discord.Color.red()
+            )
+            embed_err.add_field(
+                name="💡 Example Usages",
+                value=f'👉 `{ctx.prefix}gstart 10m "Must have Mod role" @Mod Spotify Premium`\n👉 `{ctx.prefix}gstart 30s "No special rules" none Nitro Classic`',
+                inline=False
             )
             return await ctx.send(embed=embed_err)
 
         seconds = self.parse_time(duration_str)
         if not seconds:
-            return await ctx.send("❌ Galat time format! `s` (seconds), `m` (minutes), `h` (hours), ya `d` (days) use karein.")
+            return await ctx.send("❌ Galat time format! Use `s`, `m`, `h`, ya `d`.")
+
+        GIVEAWAY_COUNTER += 1
+        current_g_id = GIVEAWAY_COUNTER
 
         end_time = datetime.datetime.now() + datetime.timedelta(seconds=seconds)
-        timestamp_str = f"<t:{int(end_time.timestamp())}:R>" # Discord dynamic countdown timer
+        timestamp_str = f"<t:{int(end_time.timestamp())}:R>"
 
         embed = discord.Embed(
-            title="🎁 NEW GIVEAWAY STARTED!",
-            description=f"### 🏆 Prize: **{prize}**\n\n🎁 Niche diye gaye button par click karke join karein!",
+            title=f"🎁 GIVEAWAY LIVE [ID: #{current_g_id}] 🎁",
+            description=f"### 🏆 Prize: **{prize}**\n\n📌 **Requirements:** {requirement_statement}",
             color=discord.Color.blurple()
         )
         embed.add_field(name="⏳ Ends In", value=timestamp_str, inline=True)
+        role_mention_text = role_req.mention if isinstance(role_req, discord.Role) else "`None`"
+        embed.add_field(name="🛡️ Role Required", value=role_mention_text, inline=True)
         embed.add_field(name="📊 Total Entries", value="`0` Players", inline=True)
-        embed.add_field(name="🛡️ Host", value=ctx.author.mention, inline=False)
-        embed.set_footer(text="SpaceX Official Giveaway System")
+        embed.add_field(name="👑 Host", value=ctx.author.mention, inline=False)
+        embed.set_footer(text="Niche diye gaye button par click karke join karein!")
 
-        view = GiveawayView()
+        view = GiveawayView(required_role=role_req)
         g_msg = await ctx.send(content="🎉 **GIVEAWAY LIVE** 🎉", embed=embed, view=view)
+
+        # Global storage matrix tracking database register
+        ACTIVE_GIVEAWAYS[current_g_id] = {
+            "message": g_msg,
+            "view": view,
+            "prize": prize,
+            "ended": False
+        }
 
         try:
             await ctx.message.delete()
         except Exception:
             pass
 
-        # Timer countdown end hone tak wait karo background me
+        # Background handler setup countdown timer loop
         await asyncio.sleep(seconds)
+        await self.end_giveaway_logic(current_g_id, ctx.channel)
 
-        # Message refresh karke entrants fetch karo
+    async def end_giveaway_logic(self, giveaway_id, channel):
+        if giveaway_id not in ACTIVE_GIVEAWAYS or ACTIVE_GIVEAWAYS[giveaway_id]["ended"]:
+            return
+
+        data = ACTIVE_GIVEAWAYS[giveaway_id]
+        data["ended"] = True
+        
         try:
-            g_msg = await ctx.channel.fetch_message(g_msg.id)
-        except discord.NotFound:
-            return # Agar kisi ne beech me giveaway message hi udaya toh exit
+            g_msg = await channel.fetch_message(data["message"].id)
+        except Exception:
+            return
+
+        view = data["view"]
+        prize = data["prize"]
 
         if not view.entrants:
             embed_end = discord.Embed(
-                title="🛑 Giveaway Ended",
-                description=f"### 🏆 Prize: **{prize}**\n\n❌ Kisi ne giveaway me part nahi liya, toh koi winner nahi bana!",
+                title=f"🛑 Giveaway Ended [ID: #{giveaway_id}]",
+                description=f"### 🏆 Prize: **{prize}**\n\n❌ Kisi ne parameters check criteria clear karke join nahi kiya!",
                 color=discord.Color.red()
             )
             await g_msg.edit(content="🛑 **GIVEAWAY ENDED** 🛑", embed=embed_end, view=None)
@@ -109,41 +155,55 @@ class ModGiveaway(commands.Cog):
         )
         embed_win.set_footer(text="Mubarak ho bhai!")
         
-        # Disabled button show karne ke liye view ko None kar do
         await g_msg.edit(content="🎉 **GIVEAWAY ENDED** 🎉", embed=embed_win, view=None)
-        await ctx.send(f"🥳 **Mubarak ho {winner.mention}!** Tumne **{prize}** ka giveaway jeet liya hai! {g_msg.jump_url}")
+        await channel.send(f"🥳 **Mubarak ho {winner.mention}!** Tumne **{prize}** ka giveaway jeet liya hai! {g_msg.jump_url}")
+
+    @commands.command(name="giveawayend", aliases=["gend"])
+    @commands.has_permissions(manage_messages=True)
+    async def giveaway_end(self, ctx, giveaway_id: int = None):
+        """Chal rahe kisi bhi giveaway ko uski ID ke zariye instantly end karne ke liye."""
+        if not giveaway_id:
+            return await ctx.send(f"❌ Sahi tarika: `{ctx.prefix}gend <giveaway_no_integer>`\n👉 Example: `{ctx.prefix}gend 1`")
+
+        if giveaway_id not in ACTIVE_GIVEAWAYS:
+            return await ctx.send(f"❌ Mujhe ID `#{giveaway_id}` ka koi active giveaway nahi mila!")
+            
+        if ACTIVE_GIVEAWAYS[giveaway_id]["ended"]:
+            return await ctx.send("❌ Yeh giveaway pehle se hi khatam ho chuka hai!")
+
+        await ctx.send(f"⏱️ ID `#{giveaway_id}` ke giveaway ko instantly end kiya jaa raha hai...")
+        await self.end_giveaway_logic(giveaway_id, ctx.channel)
+
 
     @commands.command(name="greroll", aliases=["reroll"])
     @commands.has_permissions(manage_messages=True)
-    async def greroll(self, ctx, message_id: int = None):
-        """Giveaway ka naya winner instantly nikalne ke liye (Reroll)."""
-        if not message_id:
-            return await ctx.send(f"❌ Sahi tarika: `{ctx.prefix}reroll <giveaway_message_id>`")
+    async def greroll(self, ctx, giveaway_id: int = None):
+        """Khatam hue giveaway me se instantly naya winner roll karne ke liye."""
+        if not giveaway_id:
+            return await ctx.send(f"❌ Sahi tarika: `{ctx.prefix}reroll <giveaway_id_no>`\n👉 Example: `{ctx.prefix}reroll 1`")
 
-        try:
-            msg = await ctx.channel.fetch_message(message_id)
-            if not msg.embeds:
-                return await ctx.send("❌ Yeh koi sahi giveaway message nahi hai!")
-            
-            # Pure channel history se piche jaakar button clickers check karne ka fallback ya embed data extract logic
-            # Reroll tabhi chalega jab button clickers active memory me ho, par direct interaction parse karne ke liye embed descriptions se total entries and filters check matrix build karte hain.
-            # Lekin simple reroll setup ke liye agar hum purane reactions/mentions check karein ya direct message context filter lagayein:
-            await ctx.send("🎲 *New winner select ho raha hai...*")
-            
-            # Simple trick: Pinned message list ya embed se data verify karke purane participants fetch matrix:
-            # Agar bot temporary variables save nahi kar pa raha, toh hum reactions filters ya normal random search trigger kar sakte hain.
-            # Lekin upar wale View entries context ke basis par, direct active tracking ke liye agar automatic memory fetch karein:
-            # To keep it completely robust, let's fetch active message authors or random active context
-            return await ctx.send("🔄 Reroll function completed! (Make sure message_id matches active giveaways).")
-            
-        except Exception as e:
-            await ctx.send(f"❌ Message nahi mila ya error aayi: `{e}`")
+        if giveaway_id not in ACTIVE_GIVEAWAYS:
+            return await ctx.send("❌ Is giveaway ID ka cache data memory me nahi hai!")
+
+        view = ACTIVE_GIVEAWAYS[giveaway_id]["view"]
+        prize = ACTIVE_GIVEAWAYS[giveaway_id]["prize"]
+
+        if not view.entrants:
+            return await ctx.send("❌ Is giveaway me koi entrants hi nahi the, reroll nahi ho sakta!")
+
+        winner_id = random.choice(list(view.entrants))
+        winner = self.bot.get_user(winner_id)
+
+        await ctx.send(f"🎲 **Reroll Action:** {winner.mention} naye winner chune gaye hain **{prize}** ke liye! 🎉")
 
     @giveaway.error
+    @giveaway_end.error
     @greroll.error
     async def giveaway_error(self, ctx, error):
         if isinstance(error, commands.MissingPermissions):
             await ctx.send("❌ **Permission Denied:** Is command ke liye aapke paas `Manage Messages` perms honi chahiye!")
+        elif isinstance(error, commands.BadArgument):
+            await ctx.send("❌ **Argument Error:** Kripya format check karein! Role mention sahi hona chahiye ya `none` string.")
 
 async def setup(bot):
     await bot.add_cog(ModGiveaway(bot))
