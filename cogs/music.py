@@ -42,7 +42,8 @@ class Music(commands.Cog):
             
             # Reconnect client verification logic
             if ctx.voice_client and ctx.voice_client.is_connected():
-                audio_source = discord.FFmpegPCMAudio(next_song['url'], **FFMPEG_OPTIONS)
+                # 🔥 FIX: Added executable_path for custom Render internal storage
+                audio_source = discord.FFmpegPCMAudio(next_song['url'], executable_path='./ffmpeg/ffmpeg', **FFMPEG_OPTIONS)
                 ctx.voice_client.play(audio_source, after=lambda e: self.play_next(ctx))
                 
                 embed = discord.Embed(
@@ -98,7 +99,8 @@ class Music(commands.Cog):
                 )
                 await ctx.send(embed=embed)
             else:
-                audio_source = discord.FFmpegPCMAudio(song_info['url'], **FFMPEG_OPTIONS)
+                # 🔥 FIX: Added executable_path here as well for single direct stream hit
+                audio_source = discord.FFmpegPCMAudio(song_info['url'], executable_path='./ffmpeg/ffmpeg', **FFMPEG_OPTIONS)
                 ctx.voice_client.play(audio_source, after=lambda e: self.play_next(ctx))
                 
                 embed = discord.Embed(
