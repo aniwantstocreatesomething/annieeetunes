@@ -7,7 +7,9 @@ import random
 class StocksNews(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        # 🔥 LOCK: Automatic loop background calls completely removed!
 
+    # 🔥 FIX: `@tasks.loop` decorator ko poora hata diya hai taaki automatic trigger strictly dead ho jaye
     async def flash_market_news(self):
         # 🌏 SINGLE POPULAR STOCK TARGET DATABASE
         single_stock_news = [
@@ -56,7 +58,7 @@ class StocksNews(commands.Cog):
             {
                 "ticker": "BTC", 
                 "type": "bad", 
-                "title": "🚫 CRYPTO DUMP REPORT: BLACK SWAN EVENT! 💀",
+                "title": "🚫 CRYPTO DUMP REPORT: BLACK BLACK SWAN EVENT! 💀",
                 "text": "💥 WHALE ALERT: Ek purane dormant wallet se 50,000 Bitcoins exchange liquidity pool par instant sell orders par throw kiye gaye! Bitcoin heavy panic down!"
             },
             {
@@ -92,14 +94,14 @@ class StocksNews(commands.Cog):
             
         current_price, comp_name = row[0], row[1]
         
-        # 🔥 VOLATILITY CALCULATION MATRIX FOR ONLY THE TARGET STOCK
+        # VOLATILITY CALCULATION MATRIX FOR ONLY THE TARGET STOCK
         if news_type == "good":
-            factor = random.randint(25, 45) # 25% se 45% tak ka massive single pump
+            factor = random.randint(25, 45)
             new_price = int(current_price * (1 + (factor / 100)))
             change_str = f"+{factor}% (News Pump)"
             color = discord.Color.green()
         else:
-            factor = random.randint(20, 35) # 20% se 35% tak ka direct single asset crash
+            factor = random.randint(20, 35)
             new_price = max(10, int(current_price * (1 - (factor / 100))))
             change_str = f"-{factor}% (News Crash)"
             color = discord.Color.red()
