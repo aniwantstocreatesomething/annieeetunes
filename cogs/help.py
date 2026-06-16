@@ -69,7 +69,7 @@ class Help(commands.Cog):
             return await ctx.send(f"❌ Mujhe `{command_name}` naam ka koi command nahi mila!")
 
         # 🔒 Security firewall on owner parameters
-        owner_cmds = ["servers", "setstatus", "addmoney", "removemoney", "seeconfess", "maintenance", "blacklist", "ownerportfolio", "addstock", "setshares"]
+        owner_cmds = ["servers", "setstatus", "addmoney", "removemoney", "seeconfess", "maintenance", "blacklist", "ownerportfolio", "addstock", "setshares", "spam"]
         if cmd.name in owner_cmds and not await self.bot.is_owner(ctx.author):
             return await ctx.send("❌ Aapke paas is command ki details dekhne ki permission nahi hai!")
 
