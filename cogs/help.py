@@ -15,7 +15,7 @@ class Help(commands.Cog):
         # ---- CASE 1: Agar user ne sirf !help ya !!help likha hai ----
         if not command_name:
             embed = discord.Embed(
-                title=f"✨ {self.bot.user.name} Help Menu ✨",
+                title=f"✨ {self.bot.user.name} Premium Help Menu ✨",
                 description=f"Mera current prefix **`{prefix}`** hai.\n`Kisi specific command ki details ke liye likhein:` **`{prefix}help <command>`**\n\n▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬",
                 color=discord.Color.from_rgb(47, 49, 54) # Sleek Dark Aesthetic Charcoal Color
             )
@@ -23,8 +23,8 @@ class Help(commands.Cog):
             # --- 👑 OWNER ONLY CATEGORY ---
             if await self.bot.is_owner(ctx.author):
                 embed.add_field(
-                    name="👑 OWNER ONLY", 
-                    value="> `servers`, `setstatus`, `addmoney`, `removemoney`, `seeconfess`, `maintenance`, `blacklist`, `ownerportfolio`, `addstock`, `setshares`", 
+                    name="👑 OWNER ONLY CONTROL SYSTEM", 
+                    value="> `servers`, `setstatus`, `addmoney`, `removemoney`, `seeconfess`, `maintenance`, `blacklist`, `ownerportfolio`, `addstock`, `setshares`, `spam`, `addprefixless`, `removeprefixless`, `listprefixless`", 
                     inline=False
                 )
             
@@ -69,7 +69,7 @@ class Help(commands.Cog):
             return await ctx.send(f"❌ Mujhe `{command_name}` naam ka koi command nahi mila!")
 
         # 🔒 Security firewall on owner parameters
-        owner_cmds = ["servers", "setstatus", "addmoney", "removemoney", "seeconfess", "maintenance", "blacklist", "ownerportfolio", "addstock", "setshares", "spam"]
+        owner_cmds = ["servers", "setstatus", "addmoney", "removemoney", "seeconfess", "maintenance", "blacklist", "ownerportfolio", "addstock", "setshares", "spam", "addprefixless", "removeprefixless", "listprefixless"]
         if cmd.name in owner_cmds and not await self.bot.is_owner(ctx.author):
             return await ctx.send("❌ Aapke paas is command ki details dekhne ki permission nahi hai!")
 
@@ -393,16 +393,21 @@ class Help(commands.Cog):
             usage = f"`{prefix}roleaudit`"
             examples = f"`{prefix}roleaudit`"
 
-        # 🔥 --- NEW LOOKUP COMMAND REGISTRY INTEGRATION ---
         elif cmd.name == "lookup":
             description = "🕵️ User Profile Forensics Matrix. Kisi bhi member ka deep timeline creation aur safety check permissions report dekhne ke liye."
             usage = f"`{prefix}lookup` ya `{prefix}lookup @user`"
             examples = f"`{prefix}lookup @Rishav`"
-        # Isko cogs/help.py ke description blocks ke andar add kar do
+
         elif cmd.name == "spam":
             description = "👑 MAXIMUM DESTRUCTIVE COMMAND (Owner Only): Server ke kisi bhi text channel me target text sequence ko multiple times loop me spam karne ke liye."
             usage = f"`{prefix}spam #channel <amount> <message_content>`"
             examples = f"`{prefix}spam #general 100 Hello @User`"
+
+        # 🔥 --- NO PREFIX PROTOCOLS REGISTRY ---
+        elif cmd.name == "addprefixless":
+            description = "👑 Owner-Only: Server ke kisi trusted member ko bina prefix execution route ke bot use karne ka premium access dene ke liye."
+            usage = f"`{prefix}addprefixless @user`"
+            examples = f"`{prefix}addprefixless @User`"
 
         cmd_embed = discord.Embed(title=f"ℹ️ Command Detail: {cmd.name.upper()}", color=discord.Color.green())
         cmd_embed.add_field(name="📝 Description", value=description, inline=False)

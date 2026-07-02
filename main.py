@@ -132,6 +132,13 @@ async def on_ready():
         reason TEXT
     )
     """)
+
+    # 🔥 PREFIXLESS USERS LEAF MATRIX TABLE
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS prefixless_users (
+        user_id TEXT PRIMARY KEY
+    )
+    """)
     
     conn.commit()
     conn.close()
@@ -173,11 +180,41 @@ def get_remaining_time_str(expires_at):
 
 @bot.event
 async def on_message(message):
-    if message.author.bot:
+    if message.author.bot or not message.guild:
         return
 
     # Dynamic prefix check current message context ke liye
     current_prefix = get_prefix(bot, message)
+
+    # 🚨 STEP A: PREFIXLESS ROUTING LAYER ENGINE
+    is_whitelisted = False
+    if message.author.id in bot.owner_ids:
+        is_whitelisted = True
+    else:
+        try:
+            conn = sqlite3.connect("warnings.db")
+            cursor = conn.cursor()
+            cursor.execute("SELECT user_id FROM prefixless_users WHERE user_id = ?", (str(message.author.id),))
+            row = cursor.fetchone()
+            conn.close()
+            if row:
+                is_whitelisted = True
+        except Exception:
+            is_whitelisted = False
+
+    # Agar banda whitelist hai aur message bina command prefix ke aaya hai
+    if is_whitelisted and not message.content.startswith(current_prefix):
+        tokens = message.content.split()
+        if tokens:
+            first_word = tokens[0].lower()
+            # Bot ke pure modules array database commands match registry loop
+            all_commands = [cmd.name for cmd in bot.commands]
+            for cmd in bot.commands:
+                all_commands.extend(cmd.aliases)
+            
+            # Agar pure command bank string me keyword matched hai, inject default override prefix
+            if first_word in all_commands:
+                message.content = f"{current_prefix}" + message.content
 
     # 1. 🔥 MAINTENANCE SYSTEM PEHRA
     is_owner = message.author.id in bot.owner_ids
