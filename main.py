@@ -277,4 +277,4 @@ if __name__ == '__main__':
     if BOT_TOKEN:
         bot.run(BOT_TOKEN)
     else:
-        print("💥 BOT_TOKEN is missing! Please configure config.py or environment variables.")git
+        print("💥 BOT_TOKEN is missing! Please configure config.py or environment variables.")
