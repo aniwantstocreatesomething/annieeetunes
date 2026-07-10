@@ -123,7 +123,7 @@ class ModStaffStats(commands.Cog):
             embed.description = "Top active moderators aur unke aggregate total logged operations metrics layout:\n\n"
 
             if not top_staff:
-                embed.description += "❌ Server logs ledger empty hai filhaal."
+                embed.description += "❌ Server logs ledger empty hai filhaal dost."
                 return await ctx.send(embed=embed)
 
             for index, (staff_id, total) in enumerate(top_staff, 1):

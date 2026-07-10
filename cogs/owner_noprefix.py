@@ -1,25 +1,12 @@
 # cogs/owner_noprefix.py
 import discord
 from discord.ext import commands
-import sqlite3
+# 🔥 main.py se direct set-cache array map reference access
+from main import PREFIXLESS_CACHE 
 
 class OwnerNoPrefix(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.db_path = "warnings.db"
-        self.init_db()
-
-    def init_db(self):
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        # Create Table for Whitelisted Users Matrix
-        cursor.execute("""
-        CREATE TABLE IF NOT EXISTS prefixless_users (
-            user_id TEXT PRIMARY KEY
-        )
-        """)
-        conn.commit()
-        conn.close()
 
     @commands.command(name="addprefixless", aliases=["ap"], hidden=True)
     @commands.is_owner()
@@ -28,16 +15,19 @@ class OwnerNoPrefix(commands.Cog):
         if not member:
             return await ctx.send(f"❌ Sahi tarika: `{ctx.prefix}addprefixless @user`")
 
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
+        # ⚡ SPEED HACK: Global connection cursor mapping
+        cursor = self.bot.db.cursor()
         try:
             cursor.execute("INSERT INTO prefixless_users (user_id) VALUES (?)", (str(member.id),))
-            conn.commit()
+            self.bot.db.commit()
+            
+            # 🔥 LIVE MEMORY CACHE INJECTION: Direct inject hash integer to run-time set
+            PREFIXLESS_CACHE.add(member.id)
+            
             await ctx.send(f"✅ **{member.name}** ko prefixless access de diya gaya hai! Ab ye launda bina prefix ke aag laga sakta hai. 😎")
-        except sqlite3.IntegrityError:
+        except Exception:
+            # Handle standard unique integrity violation array checks
             await ctx.send("❌ Yeh banda pehle se hi whitelisted hai bhai!")
-        finally:
-            conn.close()
 
     @commands.command(name="removeprefixless", aliases=["rp"], hidden=True)
     @commands.is_owner()
@@ -46,25 +36,26 @@ class OwnerNoPrefix(commands.Cog):
         if not member:
             return await ctx.send(f"❌ Sahi tarika: `{ctx.prefix}removeprefixless @user`")
 
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
+        cursor = self.bot.db.cursor()
         cursor.execute("DELETE FROM prefixless_users WHERE user_id = ?", (str(member.id),))
+        
         if cursor.rowcount > 0:
-            conn.commit()
+            self.bot.db.commit()
+            
+            # 🔥 LIVE MEMORY CACHE DISCARD: Memory structure clean discard route
+            PREFIXLESS_CACHE.discard(member.id)
+            
             await ctx.send(f"🔓 **{member.name}** ka prefixless access saaf kar diya gaya hai! Ab isko normal system follow karna hoga.")
         else:
             await ctx.send("❌ Yeh user whitelisted list me nahi mila bhai!")
-        conn.close()
 
     @commands.command(name="listprefixless", aliases=["lp"], hidden=True)
     @commands.is_owner()
     async def list_prefixless(self, ctx):
         """👑 Owner Only: Saare whitelisted logo ki absolute matrix list dekhne ke liye."""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
+        cursor = self.bot.db.cursor()
         cursor.execute("SELECT user_id FROM prefixless_users")
         rows = cursor.fetchall()
-        conn.close()
 
         embed = discord.Embed(title="🌌 SpaceX Whitelisted Prefixless Matrix", color=discord.Color.blue())
         if not rows:

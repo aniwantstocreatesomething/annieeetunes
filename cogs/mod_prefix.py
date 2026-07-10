@@ -1,7 +1,8 @@
 # cogs/mod_prefix.py
 import discord
 from discord.ext import commands
-import sqlite3
+# 🔥 main.py se run-time memory cache direct access import
+from main import PREFIX_CACHE 
 
 class ModPrefix(commands.Cog):
     def __init__(self, bot):
@@ -18,16 +19,20 @@ class ModPrefix(commands.Cog):
             return await ctx.send("❌ Prefix bohot bada hai! Maximum 5 characters tak ka hi prefix allowed hai.")
 
         try:
-            conn = sqlite3.connect("warnings.db")
-            cursor = conn.cursor()
+            # ⚡ SPEED HACK: main.py ka open global persistent connection use karo
+            cursor = self.bot.db.cursor()
+            
             # Upsert logic (insert or replace)
             cursor.execute("""
                 INSERT INTO server_prefixes (server_id, prefix) 
                 VALUES (?, ?) 
                 ON CONFLICT(server_id) DO UPDATE SET prefix = excluded.prefix
             """, (str(ctx.guild.id), new_prefix))
-            conn.commit()
-            conn.close()
+            
+            self.bot.db.commit()
+
+            # 🔥 LIVE MEMORY SPEED CACHE UPDATE: Bina bot restart kiye instantly memory runtime sync
+            PREFIX_CACHE[ctx.guild.id] = new_prefix
 
             embed = discord.Embed(
                 title="✅ Prefix Updated!",

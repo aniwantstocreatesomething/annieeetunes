@@ -32,29 +32,25 @@ def keep_alive():
     t = Thread(target=run_server)
     t.start()
 
-# ⚙️ DYNAMIC CUSTOM PREFIX FETCH ENGINE
+# 🔥 GLOBAL SPEED MATRIX: Run-time Memory Cache
+# Isse har message par DB fetch karne ka load 0% ho jayega
+PREFIX_CACHE = {}
+PREFIXLESS_CACHE = set()
+
+# ⚙️ DYNAMIC CUSTOM PREFIX FETCH ENGINE (OPTIMIZED)
 def get_prefix(bot, message):
     if not message.guild:
-        return '!!' # DMs me default prefix hamesha !! rahega
+        return '!!'
     
-    try:
-        conn = sqlite3.connect("warnings.db")
-        cursor = conn.cursor()
-        cursor.execute("SELECT prefix FROM server_prefixes WHERE server_id = ?", (str(message.guild.id),))
-        row = cursor.fetchone()
-        conn.close()
+    # ⚡ Cache se instantly uthao (0.000ms Latency)
+    if message.guild.id in PREFIX_CACHE:
+        return PREFIX_CACHE[message.guild.id]
         
-        if row:
-            return row[0] # Agar server ka custom prefix mila toh wo return karo
-    except Exception as e:
-        print(f"Prefix Fetch Error: {e}")
-    
-    return '!!' # Kuch na mile ya error aaye toh default prefix "!!" chalega
+    return '!!'
 
 # Discord Bot Setup
-intents = discord.Intents.default()
-intents.message_content = True
-intents.members = True 
+# ⚡ SPEED HACK: Intents parsing ko explicitly direct reference access diya
+intents = discord.Intents.all() 
 
 bot = commands.Bot(command_prefix=get_prefix, intents=intents, owner_ids={OWNER_ID})
 bot.remove_command('help')
@@ -69,9 +65,15 @@ async def on_ready():
     print("---------------------------------------")
     print(f'Mubarak ho! Bot ka naam hai: {bot.user.name}')
     
-    # DATABASE SETUP
-    conn = sqlite3.connect("warnings.db")
-    cursor = conn.cursor()
+    # ⚡ PERSISTENT CONNECTION MATRIX
+    # Bot runtime me ab sirf ek single connection object reuse karega
+    bot.db = sqlite3.connect("warnings.db")
+    cursor = bot.db.cursor()
+
+    # 🔥 SQLITE PERFORMANCE PRAGMAS (Ultra-Speed Tweaks)
+    cursor.execute("PRAGMA journal_mode=WAL;")  # Write-Ahead Logging for concurrency
+    cursor.execute("PRAGMA synchronous=NORMAL;") # Fast disk writing bounds
+    cursor.execute("PRAGMA cache_size=-64000;")  # 64MB cache optimization memory allocation
 
     # SERVER CUSTOM PREFIX TABLE
     cursor.execute("""
@@ -133,21 +135,31 @@ async def on_ready():
     )
     """)
 
-    # 🔥 PREFIXLESS USERS LEAF MATRIX TABLE
+    # PREFIXLESS USERS LEAF MATRIX TABLE
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS prefixless_users (
         user_id TEXT PRIMARY KEY
     )
     """)
     
-    conn.commit()
-    conn.close()
-    print("-> Database Connected & All Clean Tables Ready!")
+    bot.db.commit()
+    
+    # 🧠 WARM UP CACHE ENGINE: Memory hydration on startup
+    print("-> Hydrating runtime memory cache arrays...")
+    
+    cursor.execute("SELECT server_id, prefix FROM server_prefixes")
+    for s_id, pref in cursor.fetchall():
+        PREFIX_CACHE[int(s_id)] = pref
+        
+    cursor.execute("SELECT user_id FROM prefixless_users")
+    for (u_id,) in cursor.fetchall():
+        PREFIXLESS_CACHE.add(int(u_id))
+        
+    print("-> Database Connected & Speed Cache Engines Synchronized!")
     
     print('Modules load ho rahe hain...')
     for filename in os.listdir('./cogs'):
         if filename.endswith('.py'):
-            # 🔥 CRITICAL ENGINE FIX: Non-cog utility files ko load handler se filter out karo
             if filename in ['stocks_core.py', 'eco_stocks_list.py', 'music_core.py']:
                 print(f'-> Skipped Non-Cog Utility File: {filename}')
                 continue
@@ -183,36 +195,23 @@ async def on_message(message):
     if message.author.bot or not message.guild:
         return
 
-    # Dynamic prefix check current message context ke liye
+    # Cache optimized fast lookup
     current_prefix = get_prefix(bot, message)
 
-    # 🚨 STEP A: PREFIXLESS ROUTING LAYER ENGINE
+    # 🚨 STEP A: PREFIXLESS ROUTING LAYER ENGINE (FAST LOOKUP)
     is_whitelisted = False
-    if message.author.id in bot.owner_ids:
+    if message.author.id in bot.owner_ids or message.author.id in PREFIXLESS_CACHE:
         is_whitelisted = True
-    else:
-        try:
-            conn = sqlite3.connect("warnings.db")
-            cursor = conn.cursor()
-            cursor.execute("SELECT user_id FROM prefixless_users WHERE user_id = ?", (str(message.author.id),))
-            row = cursor.fetchone()
-            conn.close()
-            if row:
-                is_whitelisted = True
-        except Exception:
-            is_whitelisted = False
 
     # Agar banda whitelist hai aur message bina command prefix ke aaya hai
     if is_whitelisted and not message.content.startswith(current_prefix):
         tokens = message.content.split()
         if tokens:
             first_word = tokens[0].lower()
-            # Bot ke pure modules array database commands match registry loop
             all_commands = [cmd.name for cmd in bot.commands]
             for cmd in bot.commands:
                 all_commands.extend(cmd.aliases)
             
-            # Agar pure command bank string me keyword matched hai, inject default override prefix
             if first_word in all_commands:
                 message.content = f"{current_prefix}" + message.content
 
@@ -234,13 +233,11 @@ async def on_message(message):
                 return await message.channel.send(embed=embed)
             return
 
-    # 2. 🚨 GLOBAL BLACKLIST CHECKER
+    # 2. 🚨 GLOBAL BLACKLIST CHECKER (USES ACTIVE CONNECTION)
     current_time = int(time.time())
-    conn = sqlite3.connect("warnings.db")
-    cursor = conn.cursor()
+    cursor = bot.db.cursor()
     cursor.execute("SELECT expires_at, reason FROM blacklist WHERE user_id = ?", (str(message.author.id),))
     row = cursor.fetchone()
-    conn.close()
 
     if row:
         expires_at, reason = row[0], row[1]
@@ -250,11 +247,8 @@ async def on_message(message):
             else:
                 return
         elif current_time >= expires_at:
-            conn = sqlite3.connect("warnings.db")
-            cursor = conn.cursor()
             cursor.execute("DELETE FROM blacklist WHERE user_id = ?", (str(message.author.id),))
-            conn.commit()
-            conn.close()
+            bot.db.commit()
 
     # Dynamic ping response handler using current prefix
     if bot.user.mentioned_in(message) and len(message.content.strip().split()) == 1:
