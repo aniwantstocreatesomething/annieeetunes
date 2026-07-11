@@ -115,6 +115,21 @@ class SpaceXBot(commands.Bot):
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
         )
         """)
+
+        # MUSIC BOT CONFIG TABLES (DJ and 24/7 Mode)
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS dj_roles (
+            server_id TEXT PRIMARY KEY,
+            role_id TEXT
+        )
+        """)
+
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS twentyfour_seven (
+            server_id TEXT PRIMARY KEY,
+            enabled INTEGER DEFAULT 0
+        )
+        """)
         
         # Moderation & AFK Tables
         cursor.execute("""
