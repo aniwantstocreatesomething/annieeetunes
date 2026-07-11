@@ -343,8 +343,19 @@ class LavalinkMusic(commands.Cog):
                 else:
                     channel_id = getattr(track.extras, "channel_id", channel_id)
 
-            channel = self.bot.get_channel(channel_id) if channel_id else None
+            channel = None
+            if channel_id:
+                channel = self.bot.get_channel(channel_id)
+                if channel is None:
+                    try:
+                        channel = await self.bot.fetch_channel(channel_id)
+                    except:
+                        pass
             
+            # Fallback to the voice channel's text chat if the original channel can't be found
+            if channel is None and hasattr(player, 'channel') and player.channel:
+                channel = player.channel
+
             if channel is not None:
                 await channel.send(embed=self.now_playing_embed(track), view=LavalinkControls(self, player.guild.id))
         except Exception as e:
@@ -353,6 +364,8 @@ class LavalinkMusic(commands.Cog):
             try:
                 if channel is not None:
                     await channel.send(f"⚠️ **Debug Error in Player:** `{e}`")
+                elif hasattr(payload.player, 'channel') and payload.player.channel:
+                    await payload.player.channel.send(f"⚠️ **Debug Error in Player:** `{e}`")
             except:
                 pass
 
