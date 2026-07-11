@@ -330,7 +330,7 @@ class Music(commands.Cog):
     async def extract_track(self, query: str, requester: discord.abc.User) -> Track:
         """Resolve a URL or try YouTube then SoundCloud for a plain search."""
 
-        candidates = [query] if self._is_url(query) else [f"ytsearch1:{query}", f"scsearch1:{query}"]
+        candidates = [query] if self._is_url(query) else [f"ytsearch1:{query}"]
         errors: list[Exception] = []
         for candidate in candidates:
             try:
@@ -341,7 +341,7 @@ class Music(commands.Cog):
 
         if self._youtube_auth_required(errors):
             raise TrackLookupError(
-                "YouTube requires authentication for this server. Configure YTDLP_COOKIES_FILE or try a SoundCloud URL."
+                "YouTube requires authentication for this server. Configure YTDLP_COOKIES_FILE or check your cookies format."
             )
         raise TrackLookupError("I could not find a playable result for that search or URL.")
 
