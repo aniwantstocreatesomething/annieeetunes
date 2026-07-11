@@ -54,7 +54,23 @@ class YTDLPLogger:
 def configured_ytdl_options() -> dict:
     """Create extractor options and optionally load a deployed cookies file."""
 
+    import tempfile
     options = {**YTDL_BASE_OPTIONS, "logger": YTDLPLogger()}
+    
+    # Support for passing raw cookie text via environment variable (Ideal for Render)
+    cookie_content = os.getenv("YTDLP_COOKIES")
+    if cookie_content:
+        try:
+            # Securely write to a temporary file (avoids PermissionError & file locking issues)
+            temp_cookie = tempfile.NamedTemporaryFile(mode="w", delete=False, encoding="utf-8", suffix=".txt")
+            temp_cookie.write(cookie_content)
+            temp_cookie.close()
+            options["cookiefile"] = temp_cookie.name
+            log.info("yt-dlp cookie authentication is enabled via YTDLP_COOKIES env variable.")
+            return options
+        except Exception as e:
+            log.error("Failed to write YTDLP_COOKIES to a temporary file: %s", e)
+
     cookie_file = os.getenv("YTDLP_COOKIES_FILE")
     if cookie_file:
         cookie_path = Path(cookie_file).expanduser()
