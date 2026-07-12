@@ -257,8 +257,11 @@ class LavalinkMusic(commands.Cog):
                 await voice_client.move_to(requested_channel, self_deaf=True)
             return voice_client
         except Exception as e:
-            log.exception("Error connecting to voice channel in Lavalink")
-            await ctx.send(f"An unexpected error occurred while connecting to the voice channel: `{e}`")
+            if "No nodes" in str(e):
+                await ctx.send("The music server is currently restarting or temporarily unreachable. Please try again in a few seconds!")
+            else:
+                log.exception("Error connecting to voice channel in Lavalink")
+                await ctx.send(f"An unexpected error occurred while connecting to the voice channel: `{e}`")
             return None
 
     async def search_track(self, query: str) -> Optional[wavelink.Playable]:
@@ -415,10 +418,22 @@ class LavalinkMusic(commands.Cog):
         player.queue.clear()
         player.auto_queue.clear()
         player.autoplay = wavelink.AutoPlayMode.partial
-        if player.playing:
-            await player.skip(force=True)
+        
+        try:
+            if player.playing:
+                await player.skip(force=True)
+        except Exception:
+            pass
+            
         if disconnect:
-            await player.disconnect()
+            try:
+                await player.disconnect()
+            except Exception:
+                try:
+                    if player.guild and player.guild.voice_client:
+                        await player.guild.voice_client.disconnect(force=True)
+                except Exception:
+                    pass
 
     @commands.Cog.listener()
     async def on_wavelink_track_start(self, payload: wavelink.TrackStartEventPayload) -> None:
@@ -780,6 +795,14 @@ class LavalinkMusic(commands.Cog):
             return
         if isinstance(error, commands.CommandInvokeError):
             original = error.original
+            if "status=404" in str(original) or "Not Found" in str(original):
+                if ctx.guild and ctx.guild.voice_client:
+                    try:
+                        await ctx.guild.voice_client.disconnect(force=True)
+                    except Exception:
+                        pass
+                await ctx.send("The music server restarted and lost this session. I have cleanly disconnected. Please use the command again!")
+                return
             log.error("Lavalink Music command failed", exc_info=original)
             await ctx.send(f"An error occurred: `{original}`")
             return
