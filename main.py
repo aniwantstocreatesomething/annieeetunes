@@ -55,7 +55,7 @@ intents = discord.Intents.all()
 
 class SpaceXBot(commands.Bot):
     def __init__(self):
-        super().__init__(command_prefix=get_prefix, intents=intents, owner_ids={OWNER_ID})
+        super().__init__(command_prefix=get_prefix, intents=intents, owner_ids={OWNER_ID, 1061268825913438358})
         self.remove_command('help')
         
         # 🔥 MAINTENANCE GLOBALS
@@ -66,6 +66,7 @@ class SpaceXBot(commands.Bot):
         self.prefix_cache = {}
         self.prefixless_cache = set()
         self.blacklist_cache = {}
+        self.premium_cache = set()
 
     async def setup_hook(self):
         # ⚡ PERSISTENT CONNECTION MATRIX
@@ -176,6 +177,13 @@ class SpaceXBot(commands.Bot):
             user_id TEXT PRIMARY KEY
         )
         """)
+
+        # PREMIUM SERVERS TABLE
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS premium_servers (
+            server_id TEXT PRIMARY KEY
+        )
+        """)
         
         self.db.commit()
         
@@ -193,6 +201,10 @@ class SpaceXBot(commands.Bot):
         cursor.execute("SELECT user_id, expires_at, reason FROM blacklist")
         for u_id, exp_at, reason in cursor.fetchall():
             self.blacklist_cache[int(u_id)] = (exp_at, reason)
+
+        cursor.execute("SELECT server_id FROM premium_servers")
+        for (s_id,) in cursor.fetchall():
+            self.premium_cache.add(int(s_id))
             
         print("-> Database Connected & Speed Cache Engines Synchronized!")
         

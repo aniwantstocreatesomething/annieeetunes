@@ -244,6 +244,8 @@ class PlayerControls(discord.ui.View):
 
     @discord.ui.button(label="Autoplay", emoji="♾️", style=discord.ButtonStyle.secondary, row=1)
     async def autoplay(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        if interaction.guild_id not in self.cog.bot.premium_cache:
+            return await interaction.response.send_message("❌ **Autoplay** is a premium feature! Please contact the owner to get premium access for this server.", ephemeral=True)
         voice_client = await self._voice_client_for(interaction)
         if voice_client is None:
             return
@@ -816,6 +818,8 @@ class Music(commands.Cog):
     @commands.command(aliases=["ap"], help="Toggle autoplay, or use on/off to set it explicitly.")
     @commands.guild_only()
     async def autoplay(self, ctx: commands.Context, state: Optional[str] = None) -> None:
+        if ctx.guild.id not in self.bot.premium_cache:
+            return await ctx.send("❌ **Autoplay** is a premium feature! Please contact the owner to get premium access for this server.")
         if not self.requester_is_with_bot(ctx):
             await ctx.send("Join my voice channel before controlling playback.")
             return

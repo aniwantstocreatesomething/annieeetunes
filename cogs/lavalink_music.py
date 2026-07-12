@@ -174,6 +174,8 @@ class LavalinkControls(discord.ui.View):
 
     @discord.ui.button(emoji="🤍", style=discord.ButtonStyle.success, row=1)
     async def autoplay(self, interaction: discord.Interaction, button: discord.ui.Button) -> None:
+        if interaction.guild_id not in self.cog.bot.premium_cache:
+            return await interaction.response.send_message("❌ **Autoplay** is a premium feature! Please contact the owner to get premium access for this server.", ephemeral=True)
         player = await self._player_for(interaction)
         if player is None: return
         enabled = self.cog.set_autoplay(player)
@@ -464,6 +466,8 @@ class LavalinkMusic(commands.Cog):
     @commands.command(name="247", aliases=["24/7"], help="Toggle 24/7 mode.")
     @commands.has_permissions(administrator=True)
     async def toggle_247(self, ctx: commands.Context) -> None:
+        if ctx.guild.id not in self.bot.premium_cache:
+            return await ctx.send("❌ **24/7** is a premium feature! Please contact the owner to get premium access for this server.")
         conn = sqlite3.connect("warnings.db")
         cursor = conn.cursor()
         enabled = is_247_enabled(ctx.guild.id)
@@ -680,6 +684,8 @@ class LavalinkMusic(commands.Cog):
     @commands.command(aliases=["ap"], help="Toggle autoplay.")
     @commands.guild_only()
     async def autoplay(self, ctx: commands.Context, state: Optional[str] = None) -> None:
+        if ctx.guild.id not in self.bot.premium_cache:
+            return await ctx.send("❌ **Autoplay** is a premium feature! Please contact the owner to get premium access for this server.")
         if not can_control(ctx):
             return await ctx.send("❌ You need the DJ role to use this command.")
         if not self.is_same_voice_channel(ctx):

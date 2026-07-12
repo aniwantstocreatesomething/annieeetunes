@@ -63,5 +63,37 @@ class OwnerServers(commands.Cog):
             # Alternate pathway if DM configurations are sealed shut
             await ctx.send("⚠️ Aapka DM locked hai bhai, validation details yahin override kar raha hoon:", embed=embed)
 
+    @commands.command(name="addpremium", aliases=["apremium"], hidden=True)
+    @commands.is_owner()
+    async def add_premium(self, ctx, server_id: int):
+        """👑 Sirf Bot Owner ke liye - Kisi server ko premium status dene ke liye."""
+        if server_id in self.bot.premium_cache:
+            return await ctx.send(f"❌ Server `{server_id}` pehle se hi premium hai!")
+        
+        try:
+            cursor = self.bot.db.cursor()
+            cursor.execute("INSERT INTO premium_servers (server_id) VALUES (?)", (str(server_id),))
+            self.bot.db.commit()
+            self.bot.premium_cache.add(server_id)
+            await ctx.send(f"✅ Server `{server_id}` ko successfully **Premium** access de diya gaya hai!")
+        except Exception as e:
+            await ctx.send(f"❌ Error while adding premium: {e}")
+
+    @commands.command(name="removepremium", aliases=["rpremium"], hidden=True)
+    @commands.is_owner()
+    async def remove_premium(self, ctx, server_id: int):
+        """👑 Sirf Bot Owner ke liye - Kisi server ka premium status hatane ke liye."""
+        if server_id not in self.bot.premium_cache:
+            return await ctx.send(f"❌ Server `{server_id}` premium nahi hai!")
+        
+        try:
+            cursor = self.bot.db.cursor()
+            cursor.execute("DELETE FROM premium_servers WHERE server_id = ?", (str(server_id),))
+            self.bot.db.commit()
+            self.bot.premium_cache.remove(server_id)
+            await ctx.send(f"✅ Server `{server_id}` ka **Premium** access remove kar diya gaya hai!")
+        except Exception as e:
+            await ctx.send(f"❌ Error while removing premium: {e}")
+
 async def setup(bot):
     await bot.add_cog(OwnerServers(bot))
