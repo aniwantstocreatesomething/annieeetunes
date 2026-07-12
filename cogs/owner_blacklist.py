@@ -47,6 +47,8 @@ class ModBlacklist(commands.Cog):
             cursor.execute("DELETE FROM blacklist WHERE user_id = ?", (user_id,))
             conn.commit()
             conn.close()
+            if int(user_id) in self.bot.blacklist_cache:
+                del self.bot.blacklist_cache[int(user_id)]
             return await ctx.send(f"✅ **Globally Un-blacklisted:** **{username}** (ID: `{user_id}`) ab bot use kar sakta hai!")
 
         # 3. ⏱️ TIME PARSER (30s, 1m, 7d, 30d, 1yr)
@@ -88,6 +90,8 @@ class ModBlacklist(commands.Cog):
         cursor.execute("INSERT OR REPLACE INTO blacklist (user_id, expires_at, reason) VALUES (?, ?, ?)", (user_id, expires_at, reason))
         conn.commit()
         conn.close()
+        
+        self.bot.blacklist_cache[int(user_id)] = (expires_at, reason)
 
         await ctx.send(f"🚨 **Globally Blacklisted:** **{username}** (ID: `{user_id}`) ko **{duration_str}** ke liye blacklist kar diya gaya hai!\n📝 **Reason:** {reason}")
 

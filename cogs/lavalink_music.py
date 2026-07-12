@@ -677,7 +677,7 @@ class LavalinkMusic(commands.Cog):
             return await ctx.send("Invalid level. Choose `none`, `low`, `medium`, or `high`.")
             
         filters = player.filters
-        filters.equalizer.set(bands=[wavelink.filters.EQBand(band=b[0], gain=b[1]) for b in bands])
+        filters.equalizer.set(bands=[{"band": b[0], "gain": b[1]} for b in bands])
         await player.set_filters(filters)
         await ctx.send(f"🎛️ Bassboost set to **{level.title()}**.")
 
