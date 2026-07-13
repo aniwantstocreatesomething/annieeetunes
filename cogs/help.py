@@ -27,12 +27,16 @@ class Help(commands.Cog):
             "`$lock` / `$lockdown` - Lock a channel or server\n"
             "`$unlock` - Unlock a channel"
         )
-        embed.add_field(name="🛡️ Moderation (Dyno-Style)", value=mod_desc, inline=False)
+        embed.add_field(name="🛡️ Moderation", value=mod_desc, inline=False)
         
         # Dev Tools & Utilities
         util_desc = (
             "`$ticket_setup` - Setup the ticket system button (Admin Only)\n"
             "`$ping` - Check bot latency\n"
+            "`$eval <code>` - Evaluate Python code (Owner Only)\n"
+            "`$bug <description>` - Report a bug\n"
+            "`$suggest <suggestion>` - Suggest a new feature\n"
+            "`$say <message>` - Make the bot say something (Admin Only)\n"
             "`$help` - Show this menu"
         )
         embed.add_field(name="⚙️ Utilities & Dev Tools", value=util_desc, inline=False)
