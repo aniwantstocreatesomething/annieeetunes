@@ -47,17 +47,11 @@ class ModMute(commands.Cog):
             # Timeout apply karna
             await member.timeout(duration, reason=f"Muted by {ctx.author.name} | Reason: {reason}")
             
-            # Embed Message taiyar karna (Timestamp ko sahi tarike se jora hai)
+            # Embed Message taiyar karna
             embed = discord.Embed(
-                title="🤫 Member Muted (Timeout)",
-                description=f"{member.mention} ko kamyabi se mute kar diya gaya hai.",
-                color=discord.Color.orange(),
-                timestamp=datetime.datetime.now(datetime.timezone.utc) # FIX: Sahi timestamp lagaya
+                description=f"✅ ***{member.name} was muted.*** | {reason}",
+                color=0x43b581 # Discord Green
             )
-            embed.add_field(name="👤 Target", value=f"{member.name} ({member.id})", inline=True)
-            embed.add_field(name="⏳ Duration", value=f"`{duration_str}`", inline=True)
-            embed.add_field(name="🛡️ Staff", value=ctx.author.mention, inline=True)
-            embed.add_field(name="📝 Reason", value=reason, inline=False)
             
             # Chat me instant reply jayega ab bina kisi delay ke
             await ctx.send(embed=embed)

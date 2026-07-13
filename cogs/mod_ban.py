@@ -35,13 +35,9 @@ class ModBan(commands.Cog):
             await member.ban(reason=f"Banned by {ctx.author.name} | Reason: {reason}", delete_message_days=1)
 
             embed = discord.Embed(
-                title="🔨 Member Banned",
-                description=f"**{member.name}** ko hamesha ke liye ban kar diya gaya hai.",
-                color=discord.Color.red()
+                description=f"✅ ***{member.name} was banned.*** | {reason}",
+                color=0x43b581 # Discord Green
             )
-            embed.add_field(name="👤 Target", value=f"{member.mention} ({member.id})", inline=True)
-            embed.add_field(name="🛡️ Staff", value=ctx.author.mention, inline=True)
-            embed.add_field(name="📝 Reason", value=reason, inline=False)
             await ctx.send(embed=embed)
 
             try:

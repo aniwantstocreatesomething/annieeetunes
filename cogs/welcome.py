@@ -7,10 +7,13 @@ class Welcome(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_join(self, member):
-        # Default system channel or a channel named 'welcome'
         channel = member.guild.system_channel
         if not channel:
-            channel = discord.utils.get(member.guild.text_channels, name='welcome')
+            # Look for common welcome channel names
+            for ch in member.guild.text_channels:
+                if 'welcome' in ch.name.lower() or 'general' in ch.name.lower():
+                    channel = ch
+                    break
         
         if channel:
             embed = discord.Embed(

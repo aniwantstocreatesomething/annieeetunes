@@ -28,13 +28,9 @@ class ModKick(commands.Cog):
             await member.kick(reason=f"Kicked by {ctx.author.name} | Reason: {reason}")
 
             embed = discord.Embed(
-                title="👢 Member Kicked",
-                description=f"**{member.name}** ko server se nikal diya gaya hai.",
-                color=discord.Color.red()
+                description=f"✅ ***{member.name} was kicked.*** | {reason}",
+                color=0x43b581 # Discord Green
             )
-            embed.add_field(name="👤 Target", value=f"{member.mention} ({member.id})", inline=True)
-            embed.add_field(name="🛡️ Staff", value=ctx.author.mention, inline=True)
-            embed.add_field(name="📝 Reason", value=reason, inline=False)
             await ctx.send(embed=embed)
 
             try:
